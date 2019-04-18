@@ -1,24 +1,47 @@
 {
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana",
-  "version": "0.0.0",
+  "description": "Example Grafana SimpleJSON connector for ArangoDB.",
+  "version": "1.0.0",
+  "thumbnail": "grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
   },
+  "author": "ArangoDB GmbH",
+  "contributors": ["Alan Plum <me@pluma.io>"],
+  "license": "Apache-2.0",
   "main": "index.js",
-  "scripts": {
-    "generateDummyData": "scripts/generateDummyData.js"
-  },
   "configuration": {
-    "targets": {
+    "collections": {
       "type": "string",
-      "description": "Collection names to be exposed as metrics targets, comma-separated, optionally with per-collection alias as prefix, e.g. `coll1,alias1:coll2,coll3` exposes collections `coll1`, `coll2`, `coll3` as `coll1`, `alias1`, `coll3`.",
-      "required": true
+      "description": "Names of collections that will be exposed as targets, comma-separated."
     },
-    "tags": {
+    "aggregation": {
       "type": "string",
-      "description": "Field names to be exposed as tags, comma-seperated with type as suffix, e.g. `field1:string,field2:number`.",
+      "description": "Aggregation function. Should be one of SUM, AVG, MIN, MAX.",
+      "default": "SUM",
       "required": false
+    },
+    "dateField": {
+      "type": "string",
+      "description": "Name of the field containing the date time for each data point.",
+      "default": "date",
+      "required": false
+    },
+    "valueField": {
+      "type": "string",
+      "description": "Name of the field containing the numerical value for each data point.",
+      "default": "value",
+      "required": false
+    },
+    "username": {
+      "type": "string",
+      "description": "Username incoming requests should use to authenticate."
+    },
+    "password": {
+      "type": "password",
+      "required": false,
+      "description": "Password incoming requests should use to authenticate."
     }
   }
 }

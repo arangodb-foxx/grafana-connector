@@ -1,17 +1,74 @@
 "use strict";
 const joi = require("joi");
-const createRouter = require("@arangodb/foxx/router");
+const { aql, db, query } = require("@arangodb");
 const { context } = require("@arangodb/locals");
-const { getTargets } = require("./utils/getTargets");
-const { doTableQuery } = require("./queries/table");
-const { doTimeserieQuery } = require("./queries/timeserie");
-const router = createRouter();
-const targets = getTargets(context.configuration.targets);
+const createRouter = require("@arangodb/foxx/router");
+const { getAuth } = require("./util");
 
+/** @type {{
+ *   collections: string,
+ *   aggregation: string,
+ *   dateField: string,
+ *   valueField: string,
+ *   username: string,
+ *   password: string
+ * }} */
+const cfg = context.configuration;
+
+if (
+  ![
+    "LENGTH",
+    "MIN",
+    "MAX",
+    "SUM",
+    "AVERAGE",
+    "STDDEV_POPULATION",
+    "STDDEV_SAMPLE",
+    "VARIANCE_POPULATION",
+    "VARIANCE_SAMPLE",
+    "UNIQUE",
+    "SORTED_UNIQUE",
+    "COUNT_DISTINCT",
+    "COUNT",
+    "AVG",
+    "STDDEV",
+    "VARIANCE",
+    "COUNT_UNIQUE"
+  ].includes(cfg.aggregation.toUpperCase())
+) {
+  throw new Error(
+    `Invalid service configuration. Unknown aggregation function: ${
+      cfg.aggregation
+    }`
+  );
+}
+
+const AGG = aql.literal(cfg.aggregation.toUpperCase());
+const TARGETS = cfg.collections.split(",").map(str => str.trim());
+for (const target of TARGETS) {
+  if (!db._collection(target)) {
+    throw new Error(
+      `Invalid service configuration. Unknown collection: ${target}`
+    );
+  }
+}
+
+const router = createRouter();
 context.use(router);
+
 router.use((req, res, next) => {
-  if (req.arangoUser) next();
-  else res.throw("unauthorized");
+  const auth = getAuth(req);
+  if (!auth || !auth.basic) {
+    res.throw(401, "Authentication required");
+  }
+  const { username, password } = auth.basic;
+  if (
+    username !== cfg.username ||
+    (cfg.password && password !== cfg.password)
+  ) {
+    res.throw(403, "Bad username or password");
+  }
+  next();
 });
 
 router.get("/", (_req, res) => {
@@ -19,7 +76,7 @@ router.get("/", (_req, res) => {
 });
 
 router.post("/search", (_req, res) => {
-  res.json([...targets.keys()]);
+  res.json(TARGETS);
 });
 
 router
@@ -28,19 +85,32 @@ router
     const interval = body.intervalMs;
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
+    const { dateField, valueField } = cfg;
     const response = [];
     for (const { target, type } of body.targets) {
-      console.log(JSON.stringify(target));
-      const doQuery = type === "table" ? doTableQuery : doTimeserieQuery;
-      response.push(
-        doQuery({
+      const collection = db._collection(target);
+      const datapoints = query`
+        FOR doc IN ${collection}
+        FILTER doc[${dateField}] >= ${start}
+        FILTER doc[${dateField}] < ${end}
+        COLLECT date = FLOOR(doc[${dateField}] / ${interval}) * ${interval}
+        AGGREGATE value = ${AGG}(doc[${valueField}])
+        RETURN [value, date]
+      `.toArray();
+      if (type === "table") {
+        response.push({
           target,
-          collectionName: targets.get(target),
-          start,
-          end,
-          interval
-        })
-      );
+          type: "table",
+          columns: [{ text: "date" }, { text: "value" }],
+          rows: datapoints.map(([a, b]) => [b, a])
+        });
+      } else {
+        response.push({
+          target,
+          type: "timeserie",
+          datapoints
+        });
+      }
     }
     res.json(response);
   })
@@ -60,7 +130,7 @@ router
           .items(
             joi
               .object({
-                target: joi.allow(...targets.keys()).required(),
+                target: joi.allow(...TARGETS).required(),
                 type: joi.allow("timeserie", "table").required()
               })
               .required()
@@ -69,41 +139,3 @@ router
       })
       .options({ allowUnknown: true })
   );
-
-// FAKE FAKE FAKE
-
-router.post("/tag-keys", (req, res) => {
-  console.log("/tag-keys", JSON.stringify(req.body));
-  res.json([
-    { type: "string", text: "statusCode" },
-    { type: "string", text: "country" }
-  ]);
-});
-
-router.post("/tag-values", (req, res) => {
-  console.log("/tag-values", JSON.stringify(req.body));
-  switch (req.body.key) {
-    case "country":
-      res.json([
-        { text: "de" },
-        { text: "es" },
-        { text: "fr" },
-        { text: "in" },
-        { text: "nl" },
-        { text: "ru" },
-        { text: "us" }
-      ]);
-      return;
-    case "statusCode":
-      res.json([
-        { text: 200 },
-        { text: 404 },
-        { text: 201 },
-        { text: 400 },
-        { text: 500 }
-      ]);
-      return;
-    default:
-      res.throw(400);
-  }
-});
