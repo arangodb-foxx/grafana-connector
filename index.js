@@ -71,13 +71,23 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get("/", (_req, res) => {
-  res.json({ ok: true });
-});
+router
+  .get("/", (_req, res) => {
+    res.json({ ok: true });
+  })
+  .summary("SimpleJSON self-test endpoint")
+  .description(
+    "This is a dummy endpoint used by the SimpleJSON data source to confirm that the data source is configured correctly."
+  );
 
-router.post("/search", (_req, res) => {
-  res.json(TARGETS);
-});
+router
+  .post("/search", (_req, res) => {
+    res.json(TARGETS);
+  })
+  .summary("List the available metrics")
+  .description(
+    "This endpoint is used to determine which metrics (collections) are available to the data source."
+  );
 
 router
   .post("/query", (req, res) => {
@@ -138,4 +148,8 @@ router
           .required()
       })
       .options({ allowUnknown: true })
+  )
+  .summary("Perform a SimpleJSON query")
+  .description(
+    "This endpoint performs the actual query for one or more metrics in a given time range. Results are aggregated with the given interval."
   );

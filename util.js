@@ -1,5 +1,11 @@
 "use strict";
-exports.getAuth = function(req) {
+// Note: this behavior is natively available via the `req.auth` property in
+// ArangoDB 3.5 and later.
+/**
+ * @param {Foxx.Request} req
+ * @returns {null | {bearer?: string; basic?: { username?: string; password?: string }}}
+ */
+exports.getAuth = function getAuth(req) {
   const header = req.get("authorization") || "";
   let match = header.match(/^Bearer (.*)$/);
   if (match) {
