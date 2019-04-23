@@ -64,6 +64,8 @@ and then navigate to the _Settings_ tab in the top bar.
   should **not** match the ArangoDB user credentials used to access ArangoDB
   itself.
 
+![Foxx configuration dialog](./config.png)
+
 ## Adding the Data Source
 
 To add the connector as a data source in Grafana, navigate to
