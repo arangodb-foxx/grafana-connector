@@ -1,11 +1,11 @@
-# Grafana connector
+# Grafana Simple JSON connector for ArangoDB
 
 This is an example Grafana connector for ArangoDB that can be used with the
 [Simple JSON Data Source plugin](https://grafana.com/plugins/grafana-simple-json-datasource/installation).
 
 ![SimpleJSON configuration dialog](./simplejson.png)
 
-## Installation
+## Preparation
 
 First install the Simple JSON Data Source plugin using the `grafana-cli`:
 
@@ -13,8 +13,9 @@ First install the Simple JSON Data Source plugin using the `grafana-cli`:
 $ grafana-cli plugins install grafana-simple-json-datasource
 ```
 
-You may have to restart the Grafana service for the new data source to become
-available.
+You may have to restart Grafana for the new data source to become available.
+
+## Installation
 
 The Grafana connector can be installed as a Foxx service using the
 [ArangoDB web interface](https://docs.arangodb.com/latest/Manual/Programs/WebInterface/Services.html)
@@ -23,12 +24,12 @@ or the [Foxx CLI](https://github.com/arangodb/foxx-cli):
 ```sh
 $ npm install --global foxx-cli
 $ foxx install -u root -P -H http://localhost:8529 -D _system /grafana \
-https://github.com/arangodb/arangodb-grafana/archive/master.zip
+https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 
 # or without installing foxx-cli:
 
 $ npx foxx-cli install -u root -P -H http://localhost:8529 -D _system /grafana \
-https://github.com/arangodb/arangodb-grafana/archive/master.zip
+https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ```
 
 ## Configuration
@@ -66,7 +67,7 @@ and then navigate to the _Settings_ tab in the top bar.
 
 ![Foxx configuration dialog](./config.png)
 
-## Adding the Data Source
+## Adding the data source
 
 To add the connector as a data source in Grafana, navigate to
 _Configuration > Date Sources_ and press the _Add data source_ button,
