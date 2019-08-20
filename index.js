@@ -91,8 +91,37 @@ router
   );
 
 router
+  .post("/tag-keys", (_req, res) => {
+    res.json([
+      {"type":"string","text":"host"},
+      {"type":"string","text":"plugin"},
+      {"type":"string","text":"plugin_instance"},
+      {"type":"string","text":"type"},
+      {"type":"string","text":"type_instance"},
+      {"type":"string","text":"values_index"}
+    ]);
+  })
+  .summary("collectd field names")
+  .description(
+    "The names within collectd that may be used in wildcard selection."
+  );
+
+router
+  .post("/tag-values", (_req, res) => {
+    res.json([
+      {'text': 'Eins!'},
+      {'text': 'Zwei'},
+      {'text': 'Drei!'}
+    ]);
+  })
+  .summary("List the available metrics")
+  .description(
+    "This endpoint is used to determine which metrics (collections) are available to the data source."
+  );
+
+router
   .post("/query", (req, res) => {
-    var aggregate = {"MAX" : aql`MAX`};
+    let aggregate = {"MAX" : aql`MAX`};
 
     // grafana request has time as number of milliseconds
 
@@ -102,12 +131,12 @@ router
     const end = Number(new Date(body.range.to))/1000;
     const { dateField, valueField } = cfg;
 
-    var host, plugin, plugin_instance, values_index, collectionName, typeName;
-    var derive = Boolean(true);
-    var factor = 1.0;
-    var aggregation = "MAX";
-    var dashboardProp = {"dummy": "seed"};
-    var summaryField = undefined;
+    let host, plugin, plugin_instance, values_index, collectionName, typeName;
+    let derive = Boolean(true);
+    let factor = 1.0;
+    let aggregation = "MAX";
+    let dashboardProp = {"dummy": "seed"};
+    let summaryField = undefined;
     // find values from dashboard "adhocFilter"
     for (const {key, value} of body.adhocFilters) {
       dashboardProp[`${key}`] = value;
@@ -126,7 +155,7 @@ router
 
       queryStr = aql.join([queryStr, aql`FILTER doc.${dateField} >= ${start}`, aql`FILTER doc.${dateField} < ${end}`]);
 
-      for (var propName in combinedProps) {
+      for (let propName in combinedProps) {
         switch (propName) {
         case "collection":
           //              collectionName = combinedProps[propName];
@@ -141,6 +170,7 @@ router
           break;
 
         case "plugin_instance":
+//          let tempStr = combinedProps[propName];
           let tempStr = combinedProps[propName] + "%";
           queryStr = aql.join([queryStr, aql`FILTER doc.plugin_instance LIKE ${tempStr}`])
           break;
@@ -192,16 +222,16 @@ router
       } else {
         queryStr = aql.join([queryStr, aql`RETURN [value, date*1000, summary]`]);
       }
-      //        console.log(queryStr);
+      // console.log(queryStr);
 
-      var datapoints = db._query(queryStr).toArray();
+      let datapoints = db._query(queryStr).toArray();
 
       // report raw values or interval diffs?
       if (derive) {
         if (undefined === summaryField) {
 
-          var curValue, prevValue, prevTime;
-          for (var i = 0; i < datapoints.length; i++) {
+          let curValue, prevValue, prevTime;
+          for (let i = 0; i < datapoints.length; i++) {
             curValue = datapoints[i][0];
             if (i == 0) {
               datapoints[i][0] = 0;
@@ -217,12 +247,12 @@ router
             prevTime = datapoints[i][1];
           } // for
         } else {
-          var idx;
-          var curValue = [];
-          var prevValue = [];
-          var prevTime = [];
+          let idx;
+          let curValue = [];
+          let prevValue = [];
+          let prevTime = [];
 
-          for (var i = 0; i < datapoints.length; i++) {
+          for (let i = 0; i < datapoints.length; i++) {
             idx = datapoints[i][2];
             curValue[idx] = datapoints[i][0];
             if (undefined === prevValue[idx]) {
@@ -239,20 +269,20 @@ router
             prevTime[idx] = datapoints[i][1];
           } // for
 
-          var total = 0;
-          var prevTime = 0;
-          var newDatapoints = [];
-          for (var i = 0; i < datapoints.length; i++) {
-            if (prevTime != datapoints[i][1]) {
-              if (0 != prevTime) {
-                newDatapoints.push([total, prevTime]);
+          let total = 0;
+          let prevTime2 = 0;
+          let newDatapoints = [];
+          for (let i = 0; i < datapoints.length; i++) {
+            if (prevTime2 != datapoints[i][1]) {
+              if (0 != prevTime2) {
+                newDatapoints.push([total, prevTime2]);
               }
-              prevTime = datapoints[i][1];
+              prevTime2 = datapoints[i][1];
               total = 0;
             }
             total = total + datapoints[i][0];
           } // for
-          newDatapoints.push([total, prevTime]);
+          newDatapoints.push([total, prevTime2]);
 
           datapoints = newDatapoints;
         }
