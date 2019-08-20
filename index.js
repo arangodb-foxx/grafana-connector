@@ -91,171 +91,172 @@ router
   );
 
 router
-    .post("/query", (req, res) => {
-        var aggregate = {"MAX" : aql`MAX`};
+  .post("/query", (req, res) => {
+    var aggregate = {"MAX" : aql`MAX`};
 
-      // grafana request has time as number of milliseconds
+    // grafana request has time as number of milliseconds
 
-      const body = req.body;
-      const interval = body.intervalMs /1000;
-      const start = Number(new Date(body.range.from))/1000;
-      const end = Number(new Date(body.range.to))/1000;
-      const { dateField, valueField } = cfg;
+    const body = req.body;
+    const interval = body.intervalMs /1000;
+    const start = Number(new Date(body.range.from))/1000;
+    const end = Number(new Date(body.range.to))/1000;
+    const { dateField, valueField } = cfg;
 
-      var host, plugin, plugin_instance, values_index, collectionName, typeName;
-      var derive = Boolean(true);
-      var factor = 1.0;
-      var aggregation = "MAX";
-      var dashboardProp = {"dummy": "seed"};
-      var summaryField = undefined;
-      // find values from dashboard "adhocFilter"
-      for (const {key, value} of body.adhocFilters) {
-          dashboardProp[`${key}`] = value;
-      } // for
+    var host, plugin, plugin_instance, values_index, collectionName, typeName;
+    var derive = Boolean(true);
+    var factor = 1.0;
+    var aggregation = "MAX";
+    var dashboardProp = {"dummy": "seed"};
+    var summaryField = undefined;
+    // find values from dashboard "adhocFilter"
+    for (const {key, value} of body.adhocFilters) {
+      dashboardProp[`${key}`] = value;
+    } // for
 
     const response = [];
     // loop over "targets"
     for (const { target, type } of body.targets) {
 
-        // also find values from "target"
-        const decode = JSON.parse(target);
-        const combinedProps = Object.assign( {}, dashboardProp, decode);
+      // also find values from "target"
+      const decode = JSON.parse(target);
+      const combinedProps = Object.assign( {}, dashboardProp, decode);
 
-        const collection = db._collection(combinedProps["collection"]);
-        let queryStr = aql`FOR doc IN ${collection}`;
+      const collection = db._collection(combinedProps["collection"]);
+      let queryStr = aql`FOR doc IN ${collection}`;
 
-        queryStr = aql.join([queryStr, aql`FILTER doc.${dateField} >= ${start}`, aql`FILTER doc.${dateField} < ${end}`]);
+      queryStr = aql.join([queryStr, aql`FILTER doc.${dateField} >= ${start}`, aql`FILTER doc.${dateField} < ${end}`]);
 
-        for (var propName in combinedProps) {
-          switch (propName) {
-          case "collection":
-//              collectionName = combinedProps[propName];
-              break;
+      for (var propName in combinedProps) {
+        switch (propName) {
+        case "collection":
+          //              collectionName = combinedProps[propName];
+          break;
 
-          case "host":
-              queryStr = aql.join([queryStr, aql`FILTER doc.host == ${combinedProps[propName]}`])
-              break;
+        case "host":
+          queryStr = aql.join([queryStr, aql`FILTER doc.host == ${combinedProps[propName]}`])
+          break;
 
-          case "plugin":
-              queryStr = aql.join([queryStr, aql`FILTER doc.plugin == ${combinedProps[propName]}`])
-              break;
+        case "plugin":
+          queryStr = aql.join([queryStr, aql`FILTER doc.plugin == ${combinedProps[propName]}`])
+          break;
 
-          case "plugin_instance":
-              queryStr = aql.join([queryStr, aql`FILTER doc.plugin_instance LIKE ${combinedProps[propName]}%`])
-              break;
+        case "plugin_instance":
+          let tempStr = combinedProps[propName] + "%";
+          queryStr = aql.join([queryStr, aql`FILTER doc.plugin_instance LIKE ${tempStr}`])
+          break;
 
-          case "type":
-              queryStr = aql.join([queryStr, aql`FILTER doc.type == ${combinedProps[propName]}`])
-              break;
+        case "type":
+          queryStr = aql.join([queryStr, aql`FILTER doc.type == ${combinedProps[propName]}`])
+          break;
 
-          case "type_instance":
-              queryStr = aql.join([queryStr, aql`FILTER doc.type_instance == ${combinedProps[propName]}`])
-              break;
+        case "type_instance":
+          queryStr = aql.join([queryStr, aql`FILTER doc.type_instance == ${combinedProps[propName]}`])
+          break;
 
-          case "values_index":
-              values_index = combinedProps[propName];
-              break;
+        case "values_index":
+          values_index = combinedProps[propName];
+          break;
 
-          case "derive":
-              derive = (combinedProps[propName] == 'true');
-              break;
+        case "derive":
+          derive = (combinedProps[propName] == 'true');
+          break;
 
-          case "aggregation":
-              aggregation = combinedProps[propName];
-              break;
+        case "aggregation":
+          aggregation = combinedProps[propName];
+          break;
 
-          case "summary_field":
-              summaryField = combinedProps[propName];
-              break;
+        case "summary_field":
+          summaryField = combinedProps[propName];
+          break;
 
-          case "factor":
-              factor = combinedProps[propName];
-              break;
+        case "factor":
+          factor = combinedProps[propName];
+          break;
 
-          default:
-              // some error
-              break;
-          } // switch
+        default:
+          // some error
+          break;
+        } // switch
       } // for
 
-        queryStr = aql.join([queryStr, aql`COLLECT date = FLOOR(doc.${dateField} / ${interval}) * ${interval}`]);
+      queryStr = aql.join([queryStr, aql`COLLECT date = FLOOR(doc.${dateField} / ${interval}) * ${interval}`]);
 
-        if (undefined !== summaryField) {
-            queryStr = aql.join([queryStr, aql`, summary = doc.${summaryField}`]);
-        }
+      if (undefined !== summaryField) {
+        queryStr = aql.join([queryStr, aql`, summary = doc.${summaryField}`]);
+      }
 
-        queryStr = aql.join([queryStr, aql` AGGREGATE value = `, aggregate[aggregation],aql`(doc.${valueField}[${values_index}])`], "")
+      queryStr = aql.join([queryStr, aql` AGGREGATE value = `, aggregate[aggregation],aql`(doc.${valueField}[${values_index}])`], "")
 
+      if (undefined === summaryField) {
+        queryStr = aql.join([queryStr, aql`RETURN [value, date*1000]`]);
+      } else {
+        queryStr = aql.join([queryStr, aql`RETURN [value, date*1000, summary]`]);
+      }
+      //        console.log(queryStr);
+
+      var datapoints = db._query(queryStr).toArray();
+
+      // report raw values or interval diffs?
+      if (derive) {
         if (undefined === summaryField) {
-            queryStr = aql.join([queryStr, aql`RETURN [value, date*1000]`]);
-        } else {
-            queryStr = aql.join([queryStr, aql`RETURN [value, date*1000, summary]`]);
-        }
-//        console.log(queryStr);
 
-        var datapoints = db._query(queryStr).toArray();
-
-        // report raw values or interval diffs?
-        if (derive) {
-            if (undefined === summaryField) {
-
-                var curValue, prevValue, prevTime;
-                for (var i = 0; i < datapoints.length; i++) {
-                    curValue = datapoints[i][0];
-                    if (i == 0) {
-                        datapoints[i][0] = 0;
-                    } else if (prevValue <= curValue) {
-                        datapoints[i][0] = curValue - prevValue;
-                    } else {
-                        datapoints[i][0] = 0;
-                    }
-                    // adjust intervals from milliseconds to seconds
-                    datapoints[i][0] = datapoints[i][0] * factor;
-                    datapoints[i][0] = datapoints[i][0] * 1000 / (datapoints[i][1] - prevTime);
-                    prevValue = curValue;
-                    prevTime = datapoints[i][1];
-                } // for
+          var curValue, prevValue, prevTime;
+          for (var i = 0; i < datapoints.length; i++) {
+            curValue = datapoints[i][0];
+            if (i == 0) {
+              datapoints[i][0] = 0;
+            } else if (prevValue <= curValue) {
+              datapoints[i][0] = curValue - prevValue;
             } else {
-                var idx;
-                var curValue = [];
-                var prevValue = [];
-                var prevTime = [];
-
-                for (var i = 0; i < datapoints.length; i++) {
-                    idx = datapoints[i][2];
-                    curValue[idx] = datapoints[i][0];
-                    if (undefined === prevValue[idx]) {
-                        datapoints[i][0] = 0;
-                    } else if (prevValue[idx] <= curValue[idx]) {
-                        datapoints[i][0] = curValue[idx] - prevValue[idx];
-                    } else {
-                        datapoints[i][0] = 0;
-                    }
-                    // adjust intervals from milliseconds to seconds
-                    datapoints[i][0] = datapoints[i][0] * factor;
-                    datapoints[i][0] = datapoints[i][0] * 1000 / (datapoints[i][1] - prevTime[idx]);
-                    prevValue[idx] = curValue[idx];
-                    prevTime[idx] = datapoints[i][1];
-                } // for
-
-                var total = 0;
-                var prevTime = 0;
-                var newDatapoints = [];
-                for (var i = 0; i < datapoints.length; i++) {
-                    if (prevTime != datapoints[i][1]) {
-                        if (0 != prevTime) {
-                            newDatapoints.push([total, prevTime]);
-                        }
-                        prevTime = datapoints[i][1];
-                        total = 0;
-                    }
-                    total = total + datapoints[i][0];
-                } // for
-                newDatapoints.push([total, prevTime]);
-
-                datapoints = newDatapoints;
+              datapoints[i][0] = 0;
             }
-        }   // if
+            // adjust intervals from milliseconds to seconds
+            datapoints[i][0] = datapoints[i][0] * factor;
+            datapoints[i][0] = datapoints[i][0] * 1000 / (datapoints[i][1] - prevTime);
+            prevValue = curValue;
+            prevTime = datapoints[i][1];
+          } // for
+        } else {
+          var idx;
+          var curValue = [];
+          var prevValue = [];
+          var prevTime = [];
+
+          for (var i = 0; i < datapoints.length; i++) {
+            idx = datapoints[i][2];
+            curValue[idx] = datapoints[i][0];
+            if (undefined === prevValue[idx]) {
+              datapoints[i][0] = 0;
+            } else if (prevValue[idx] <= curValue[idx]) {
+              datapoints[i][0] = curValue[idx] - prevValue[idx];
+            } else {
+              datapoints[i][0] = 0;
+            }
+            // adjust intervals from milliseconds to seconds
+            datapoints[i][0] = datapoints[i][0] * factor;
+            datapoints[i][0] = datapoints[i][0] * 1000 / (datapoints[i][1] - prevTime[idx]);
+            prevValue[idx] = curValue[idx];
+            prevTime[idx] = datapoints[i][1];
+          } // for
+
+          var total = 0;
+          var prevTime = 0;
+          var newDatapoints = [];
+          for (var i = 0; i < datapoints.length; i++) {
+            if (prevTime != datapoints[i][1]) {
+              if (0 != prevTime) {
+                newDatapoints.push([total, prevTime]);
+              }
+              prevTime = datapoints[i][1];
+              total = 0;
+            }
+            total = total + datapoints[i][0];
+          } // for
+          newDatapoints.push([total, prevTime]);
+
+          datapoints = newDatapoints;
+        }
+      }   // if
       if (type === "table") {
         response.push({
           target,
@@ -264,17 +265,17 @@ router
           rows: datapoints.map(([a, b]) => [b, a])
         });
       } else {
-//          console.log("before push")
+        //          console.log("before push")
         response.push({
           target,
           type: "timeserie",
           datapoints
         });
-//          console.log("after push")
+        //          console.log("after push")
       }
     }
-//      console.log(response)
-//      console.log("duh")
+    //      console.log(response)
+    //      console.log("duh")
     res.json(response);
   })
   .body(
