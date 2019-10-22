@@ -49,14 +49,25 @@ and then navigate to the _Settings_ tab in the top bar.
   that will be used to aggregate results for Grafana. Should be one of `SUM`,
   `AVG` (`AVERAGE`), `MIN` or `MAX`.
 
+- **filterExpression** (default: empty): an AQL expression used to filter documents.
+  The current document is called `doc`.
+
 - **dateField** (default: `date`): name of the field on each document that will
   be used to find the documents relevant for each time range. The value of this
   field should be expressed in milliseconds since the start of the UNIX epoch.
+
+- **dateExpression** (default: empty): an AQL expression to compute the date.
+  The current document is called `doc`. This takes precendence over the
+  dateField.
 
 - **valueField** (default: `value`): name of the field on each document that
   will be used to determine the value for that document. The value of this
   field must be numeric and may be aggregated when Grafana requests data for
   long time ranges.
+
+- **valueExpression** (default: empty): an AQL expression to compute the value.
+  The current document is called `doc`. This takes precendence over the
+  dateField.
 
 - **username** and **password**: credentials that will be used by the Grafana
   data source to authenticate against this service.
