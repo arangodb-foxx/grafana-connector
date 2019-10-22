@@ -64,282 +64,322 @@
     },
     "names_2": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_2": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_2": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_2": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_2": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_2": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_2": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_2": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_3": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_3": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_3": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_3": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_3": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_3": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_3": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_3": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_4": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_4": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_4": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_4": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_4": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_4": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_4": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_4": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_5": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_5": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_5": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_5": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_5": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_5": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_5": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_5": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_6": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_6": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_6": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_6": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_6": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_6": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_6": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_6": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_7": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_7": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_7": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_7": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_7": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_7": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_7": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_7": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_8": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_8": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_8": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_8": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_8": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_8": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_8": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_8": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "names_9": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "collections_9": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "aggregation_9": {
       "type": "string",
-      "default": "SUM",
+      "default": "",
       "required": false
     },
     "filterExpression_9": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "dateField_9": {
       "type": "string",
-      "default": "date",
+      "default": "",
       "required": false
     },
     "dateExpression_9": {
       "type": "string",
+      "default": "",
       "required": false
     },
     "valueField_9": {
       "type": "string",
-      "default": "value",
+      "default": "",
       "required": false
     },
     "valueExpression_9": {
       "type": "string",
+      "default": "",
       "required": false
     }
   }
