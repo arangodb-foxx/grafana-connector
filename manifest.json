@@ -21,8 +21,9 @@
       "required": false,
       "description": "Password incoming requests should use to authenticate."
     },
-    "names": {
+    "targets": {
       "type": "string",
+      "required": false,
       "description": "Name of the targets as shown in Grafana, comma-separated. If empty, collection names will be used."
     },
     "collections": {
@@ -32,7 +33,7 @@
     "aggregation": {
       "type": "string",
       "description": "Aggregation function. Should be one of SUM, AVG, MIN, MAX. You can use '*' to get them all defined.",
-      "default": "SUM",
+      "default": "*",
       "required": false
     },
     "filterExpression": {
@@ -62,7 +63,47 @@
       "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
       "required": false
     },
-    "names_2": {
+    "targets_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "collections_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "aggregation_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "filterExpression_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "dateField_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "dateExpression_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "valueField_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "valueExpression_1": {
+      "type": "string",
+      "default": "",
+      "required": false
+    },
+    "targets_2": {
       "type": "string",
       "default": "",
       "required": false
@@ -102,7 +143,7 @@
       "default": "",
       "required": false
     },
-    "names_3": {
+    "targets_3": {
       "type": "string",
       "default": "",
       "required": false
@@ -142,7 +183,7 @@
       "default": "",
       "required": false
     },
-    "names_4": {
+    "targets_4": {
       "type": "string",
       "default": "",
       "required": false
@@ -182,7 +223,7 @@
       "default": "",
       "required": false
     },
-    "names_5": {
+    "targets_5": {
       "type": "string",
       "default": "",
       "required": false
@@ -222,7 +263,7 @@
       "default": "",
       "required": false
     },
-    "names_6": {
+    "targets_6": {
       "type": "string",
       "default": "",
       "required": false
@@ -262,7 +303,7 @@
       "default": "",
       "required": false
     },
-    "names_7": {
+    "targets_7": {
       "type": "string",
       "default": "",
       "required": false
@@ -302,7 +343,7 @@
       "default": "",
       "required": false
     },
-    "names_8": {
+    "targets_8": {
       "type": "string",
       "default": "",
       "required": false
@@ -342,7 +383,7 @@
       "default": "",
       "required": false
     },
-    "names_9": {
+    "targets_9": {
       "type": "string",
       "default": "",
       "required": false

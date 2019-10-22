@@ -6,16 +6,7 @@ const { context } = require("@arangodb/locals");
 const createRouter = require("@arangodb/foxx/router");
 const { getAuth } = require("./util");
 
-/** @type {{
- *   collections: string,
- *   aggregation: string,
- *   dateField: string,
- *   valueField: string,
- *   username: string,
- *   password: string
- * }} */
-const cfg = context.configuration;
-const STD_AGGREGATIONS = [
+const AGGREGATIONS = [
   "AVERAGE",
   "COUNT",
   "COUNT_DISTINCT",
@@ -29,23 +20,99 @@ const STD_AGGREGATIONS = [
   "VARIANCE_POPULATION",
   "VARIANCE_SAMPLE"
 ];
-const AGGREGATIONS = STD_AGGREGATIONS.concat([
-  "AVG",
-  "COUNT_UNIQUE",
-  "LENGTH",
-  "STDDEV",
-  "VARIANCE"
-]);
 
-const AGG_NAME = cfg.aggregation.toUpperCase();
-const TARGETS = _.map((cfg.names ? cfg.names : cfg.collections.split(",")), str => str.trim());
-const ALL_TARGETS = _.flatten(_.map(TARGETS, t => _.map(STD_AGGREGATIONS, a => t + "." + a)));
+const AGGREGATIONS_ALIASES = {
+  "AVG": "AVERAGE",
+  "COUNT_UNIQUE": "COUNT_DISTINCT",
+  "LENGTH": "COUNT",
+  "STDDEV": "STDDEV_POPULATION",
+  "VARIANCE": "VARIANCE_POPULATION"
+};
 
-for (const target of TARGETS) {
-  if (!db._collection(target)) {
+/** @type {{
+ *   username: string,
+ *   password: string,
+ *   targets: string,
+ *   collections: string,
+ *   aggregation: string,
+ *   filterExpression: string,
+ *   dateField: string,
+ *   dateExpression: string,
+ *   valueField: string,
+ *   valueExpression: string
+ * }} */
+const cfg = context.configuration;
+const TARGETS = {};
+
+for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
+  let targets = cfg["targets" + suffix];
+  const collections = cfg["collections" + suffix];
+  const filterExpression = cfg["filterExpression" + suffix];
+  const dateField = cfg["dateField" + suffix];
+  const dateExpression = cfg["dateExpression" + suffix];
+  const valueField = cfg["valueField" + suffix];
+  const valueExpression = cfg["valueExpression" + suffix];
+
+  let aggregation = cfg["aggregation" + suffix].toUpperCase();
+
+  if (AGGREGATIONS_ALIASES[aggregation]) {
+    aggregation = AGGREGATIONS_ALIASES[aggregation];
+  }
+
+  if (!targets) {
+    targets = collections;
+  }
+
+  let filterSnippet = aql.literal(filterExpression
+    ? `FILTER ${filterExpression}`
+    : "");
+
+  let dateSnippet = aql.literal(dateExpression
+    ? `LET d = ${dateExpression}`
+    : `LET d = doc["${dateField}"]`);
+
+  let valueSnippet = aql.literal(valueExpression
+    ? `LET v = ${valueExpression}`
+    : `LET v = doc["${valueField}"]`);
+
+  const targetList = _.map(targets, str => str.trim());
+  const collectionList = _.map(collections, str => str.trim());
+
+  if (0 === targetList.length) {
     throw new Error(
-      `Invalid service configuration. Unknown collection: ${target}`
+      `Invalid service configuration: need at least one target or collection`
     );
+  }
+
+  if (targetList.length !== collectionList.length) {
+    throw new Error(
+      `Invalid service configuration: got ${targetList.length} targets, but ${collectionList.length} collections`
+    );
+  }
+
+  for (let i = 0; i < targetList.length; ++i) {
+    let target = targetList[i];
+    let collection = collectionList[i];
+    let aggregations = aggregation === '*' ? AGGREGATIONS : [aggregation];
+
+    if (!db._collection(collection)) {
+      throw new Error(
+        `Invalid service configuration. Unknown collection: ${collection}`
+      );
+    }
+
+    for (let agg of aggregations) {
+      let final = target + "." + agg;
+
+      TARGETS[final] = {
+        final,
+        target,
+        collection,
+        filterSnippet,
+        dateSnippet,
+        valueSnippet
+      };
+    }
   }
 }
 
@@ -78,7 +145,7 @@ router
 
 router
   .post("/search", (_req, res) => {
-    res.json(AGG_NAME === '*' ? ALL_TARGETS : TARGETS);
+    res.json(_.keys(TARGETS));
   })
   .summary("List the available metrics")
   .description(
