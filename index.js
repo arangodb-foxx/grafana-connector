@@ -131,17 +131,17 @@ router
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
-    for (const { tgt, type } of body.targets) {
-      let target = tgt;
+    for (const { target, type } of body.targets) {
+      let tgt = target;
       let agg = AGG_NAME;
 
       if (AGG_NAME === '*') {
-        const s = tgt.split('.');
-        target = s[0];
+        const s = target.split('.');
+        tgt = s[0];
         agg = s[1];
       }
 
-      const collection = db._collection(target);
+      const collection = db._collection(tgt);
       const datapoints = seriesQuery(collection, start, end, interval, agg);
       if (type === "table") {
         response.push({
