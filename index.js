@@ -45,8 +45,13 @@ const cfg = context.configuration;
 const TARGETS = {};
 
 for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
-  let targets = cfg["targets" + suffix];
   const collections = cfg["collections" + suffix];
+
+  if (!collections) {
+    continue;
+  }
+
+  let targets = cfg["targets" + suffix];
   const filterExpression = cfg["filterExpression" + suffix];
   const dateField = cfg["dateField" + suffix];
   const dateExpression = cfg["dateExpression" + suffix];
@@ -75,8 +80,10 @@ for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
     ? `LET v = ${valueExpression}`
     : `LET v = doc["${valueField}"]`);
 
-  const targetList = _.map(targets, str => str.trim());
-  const collectionList = _.map(collections, str => str.trim());
+  const targetList = _.map(_.split(targets, ","), str => str.trim());
+  const collectionList = _.map(_.split(collections, ","), str => str.trim());
+
+  require("console").error(collectionList);
 
   if (0 === targetList.length) {
     throw new Error(
@@ -101,13 +108,14 @@ for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
       );
     }
 
-    for (let agg of aggregations) {
-      let final = target + "." + agg;
+    for (let aggregation of aggregations) {
+      let final = target + "." + aggregation;
 
       TARGETS[final] = {
         final,
         target,
         collection,
+        aggregation,
         filterSnippet,
         dateSnippet,
         valueSnippet
@@ -115,6 +123,8 @@ for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
     }
   }
 }
+
+const TARGET_KEYS = _.keys(TARGETS);
 
 const router = createRouter();
 context.use(router);
@@ -145,30 +155,16 @@ router
 
 router
   .post("/search", (_req, res) => {
-    res.json(_.keys(TARGETS));
+    res.json(TARGET_KEYS);
   })
   .summary("List the available metrics")
   .description(
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const seriesQuery = function(collection, start, end, interval, aggName) {
-  const agg = aql.literal(aggName);
-
-  const { filterExpression, dateField, valueField, dateExpression,
-          valueExpression } = cfg;
-
-  let filterSnippet = aql.literal(filterExpression
-    ? `FILTER ${filterExpression}`
-    : "");
-
-  let dateSnippet = aql.literal(dateExpression
-    ? `LET d = ${dateExpression}`
-    : `LET d = doc["${dateField}"]`);
-
-  let valueSnippet = aql.literal(valueExpression
-    ? `LET v = ${valueExpression}`
-    : `LET v = doc["${valueField}"]`);
+const seriesQuery = function(definition, start, end, interval) {
+  const agg = aql.literal(definition.aggregation);
+  const { collection, filterSnippet, dateSnippet, valueSnippet } = definition;
 
   return query`
     FOR doc IN ${collection}
@@ -184,34 +180,15 @@ const seriesQuery = function(collection, start, end, interval, aggName) {
 
 router
   .post("/query", (req, res) => {
-    if (AGG_NAME !== '*') {
-      if (!AGGREGATIONS.includes(AGG_NAME)) {
-        const allowed = AGGREGATIONS.join(", ");
-        throw new Error(
-          `Invalid service configuration. Unknown aggregation function: ${
-             cfg.aggregation
-           }, allow are ${allowed}`
-        );
-      }
-    }
-
     const body = req.body;
     const interval = body.intervalMs;
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
     for (const { target, type } of body.targets) {
-      let tgt = target;
-      let agg = AGG_NAME;
+      const definition = TARGETS[target];
+      const datapoints = definition ? seriesQuery(definition, start, end, interval) : [];
 
-      if (AGG_NAME === '*') {
-        const s = target.split('.');
-        tgt = s[0];
-        agg = s[1];
-      }
-
-      const collection = db._collection(tgt);
-      const datapoints = seriesQuery(collection, start, end, interval, agg);
       if (type === "table") {
         response.push({
           target,
@@ -245,7 +222,7 @@ router
           .items(
             joi
               .object({
-                target: joi.allow(...TARGETS).required(),
+                target: joi.allow(...TARGET_KEYS).required(),
                 type: joi.allow("timeserie", "table").required()
               })
               .required()
