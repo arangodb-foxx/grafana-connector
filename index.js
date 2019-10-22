@@ -98,13 +98,14 @@ for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
   }
 
   for (let i = 0; i < targetList.length; ++i) {
-    let target = targetList[i];
-    let collection = collectionList[i];
-    let aggregations = aggregation === '*' ? AGGREGATIONS : [aggregation];
+    const target = targetList[i];
+    const collectionName = collectionList[i];
+    const collection = db._collection(collection);
+    const aggregations = aggregation === '*' ? AGGREGATIONS : [aggregation];
 
-    if (!db._collection(collection)) {
+    if (!collection) {
       throw new Error(
-        `Invalid service configuration. Unknown collection: ${collection}`
+        `Invalid service configuration. Unknown collection: ${collectionName}`
       );
     }
 
