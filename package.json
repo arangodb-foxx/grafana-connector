@@ -2,12 +2,13 @@
   "private": true,
   "devDependencies": {
     "@types/arangodb": "^3.4.9",
-    "@types/joi": "^14.3.2"
-  },
-  "dependencies": {
+    "@types/joi": "^14.3.2",
     "babel-eslint": "^10.0.3",
     "eslint": "^6.5.1",
     "eslint-config-prettier": "^6.4.0",
     "eslint-plugin-prettier": "^3.1.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15"
   }
 }

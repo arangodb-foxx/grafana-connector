@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana-connector",
   "description": "Example Grafana Simple JSON connector for ArangoDB.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "thumbnail": "grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
@@ -12,6 +12,15 @@
   "license": "Apache-2.0",
   "main": "index.js",
   "configuration": {
+    "username": {
+      "type": "string",
+      "description": "Username incoming requests should use to authenticate."
+    },
+    "password": {
+      "type": "password",
+      "required": false,
+      "description": "Password incoming requests should use to authenticate."
+    },
     "collections": {
       "type": "string",
       "description": "Names of collections that will be exposed as targets, comma-separated."
@@ -48,15 +57,6 @@
       "type": "string",
       "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
       "required": false
-    },
-    "username": {
-      "type": "string",
-      "description": "Username incoming requests should use to authenticate."
-    },
-    "password": {
-      "type": "password",
-      "required": false,
-      "description": "Password incoming requests should use to authenticate."
     }
   }
 }

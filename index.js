@@ -1,5 +1,6 @@
 "use strict";
 const joi = require("joi");
+const _ = require("lodash");
 const { aql, db, query } = require("@arangodb");
 const { context } = require("@arangodb/locals");
 const createRouter = require("@arangodb/foxx/router");
@@ -14,7 +15,7 @@ const { getAuth } = require("./util");
  *   password: string
  * }} */
 const cfg = context.configuration;
-const allowAggregations = [
+const AGGREGATIONS = [
   "AVERAGE",
   "AVG",
   "COUNT",
@@ -36,17 +37,9 @@ const allowAggregations = [
 
 const AGG_NAME = cfg.aggregation.toUpperCase();
 
-if (!allowAggregations.includes(AGG_NAME)) {
-  const allowed = allowAggregations.join(", ");
-  throw new Error(
-    `Invalid service configuration. Unknown aggregation function: ${
-      cfg.aggregation
-    }, allow are ${allowed}`
-  );
-}
-
 const AGG = aql.literal(AGG_NAME);
-const TARGETS = cfg.collections.split(",").map(str => str.trim());
+const TARGETS = _.map(cfg.collections.split(","), str => str.trim());
+const ALL_TARGETS = _.flatten(_.map(TARGETS, t => _.map(AGGREGATIONS, a => t + "." + a)));
 
 for (const target of TARGETS) {
   if (!db._collection(target)) {
@@ -85,7 +78,11 @@ router
 
 router
   .post("/search", (_req, res) => {
-    res.json(TARGETS);
+    if (AGG_NAME === '*') {
+      res.json(ALL_TARGETS);
+    } else {
+      res.json(TARGETS);
+    }
   })
   .summary("List the available metrics")
   .description(
@@ -132,6 +129,15 @@ const seriesQuery = function(collection, start, end, interval) {
 
 router
   .post("/query", (req, res) => {
+    if (!AGGREGATIONS.includes(AGG_NAME)) {
+      const allowed = AGGREGATIONS.join(", ");
+      throw new Error(
+        `Invalid service configuration. Unknown aggregation function: ${
+          cfg.aggregation
+        }, allow are ${allowed}`
+      );
+    }
+
     const body = req.body;
     const interval = body.intervalMs;
     const start = Number(new Date(body.range.from));
