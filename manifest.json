@@ -22,6 +22,11 @@
       "default": "SUM",
       "required": false
     },
+    "filterExpression": {
+      "type": "string",
+      "description": "An AQL expression used to filter data. The current document is called 'doc'.",
+      "required": false
+    },
     "dateField": {
       "type": "string",
       "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'.",
