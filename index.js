@@ -14,37 +14,40 @@ const { getAuth } = require("./util");
  *   password: string
  * }} */
 const cfg = context.configuration;
+const allowAggregations = [
+  "AVERAGE",
+  "AVG",
+  "COUNT",
+  "COUNT_DISTINCT",
+  "COUNT_UNIQUE",
+  "LENGTH",
+  "MAX",
+  "MIN",
+  "SORTED_UNIQUE",
+  "STDDEV",
+  "STDDEV_POPULATION",
+  "STDDEV_SAMPLE",
+  "SUM",
+  "UNIQUE",
+  "VARIANCE",
+  "VARIANCE_POPULATION",
+  "VARIANCE_SAMPLE"
+];
 
-if (
-  ![
-    "LENGTH",
-    "MIN",
-    "MAX",
-    "SUM",
-    "AVERAGE",
-    "STDDEV_POPULATION",
-    "STDDEV_SAMPLE",
-    "VARIANCE_POPULATION",
-    "VARIANCE_SAMPLE",
-    "UNIQUE",
-    "SORTED_UNIQUE",
-    "COUNT_DISTINCT",
-    "COUNT",
-    "AVG",
-    "STDDEV",
-    "VARIANCE",
-    "COUNT_UNIQUE"
-  ].includes(cfg.aggregation.toUpperCase())
-) {
+const AGG_NAME = cfg.aggregation.toUpperCase();
+
+if (!allowAggregations.includes(AGG_NAME)) {
+  const allowed = allowAggregations.join(", ");
   throw new Error(
     `Invalid service configuration. Unknown aggregation function: ${
       cfg.aggregation
-    }`
+    }, allow are ${allowed}`
   );
 }
 
-const AGG = aql.literal(cfg.aggregation.toUpperCase());
+const AGG = aql.literal(AGG_NAME);
 const TARGETS = cfg.collections.split(",").map(str => str.trim());
+
 for (const target of TARGETS) {
   if (!db._collection(target)) {
     throw new Error(
@@ -89,24 +92,45 @@ router
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
+const seriesQuery = function(collection, start, end, interval) {
+  const { dateField, valueField, dateExpression, valueExpression } = cfg;
+
+  let dateSnippet;
+  let valueSnippet;
+
+  if (dateExpression) {
+    dateSnippet = `LET d = ${dateExpression}`;
+  } else {
+    dateSnippet = `LET d = doc[${dateField}]`;
+  }
+
+  if (valueExpression) {
+    valueSnippet = `LET v = ${valueExpression}`;
+  } else {
+    valueSnippet = `LET v = doc[${valueField}]`;
+  }
+
+  return query`
+    FOR doc IN ${collection}
+      ${dateSnippet}
+      FILTER d >= ${start} AND FILTER d < ${end}
+      ${valueSnippet}
+      COLLECT date = FLOOR(v / ${interval}) * ${interval}
+      AGGREGATE value = ${AGG}(v)
+      RETURN [value, date]
+  `.toArray();
+};
+
 router
   .post("/query", (req, res) => {
     const body = req.body;
     const interval = body.intervalMs;
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
-    const { dateField, valueField } = cfg;
     const response = [];
     for (const { target, type } of body.targets) {
       const collection = db._collection(target);
-      const datapoints = query`
-        FOR doc IN ${collection}
-        FILTER doc[${dateField}] >= ${start}
-        FILTER doc[${dateField}] < ${end}
-        COLLECT date = FLOOR(doc[${dateField}] / ${interval}) * ${interval}
-        AGGREGATE value = ${AGG}(doc[${valueField}])
-        RETURN [value, date]
-      `.toArray();
+      const datapoints = seriesQuery(collection, start, end, interval);
       if (type === "table") {
         response.push({
           target,

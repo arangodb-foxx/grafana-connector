@@ -2,13 +2,13 @@
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana-connector",
   "description": "Example Grafana Simple JSON connector for ArangoDB.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "thumbnail": "grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
   },
   "author": "ArangoDB GmbH",
-  "contributors": ["Alan Plum <me@pluma.io>"],
+  "contributors": ["Alan Plum <me@pluma.io>", "Frank Celler <frank@arangodb.com>"],
   "license": "Apache-2.0",
   "main": "index.js",
   "configuration": {
@@ -24,14 +24,24 @@
     },
     "dateField": {
       "type": "string",
-      "description": "Name of the field containing the date time for each data point.",
+      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'.",
       "default": "date",
+      "required": false
+    },
+    "dateExpression": {
+      "type": "string",
+      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'.",
       "required": false
     },
     "valueField": {
       "type": "string",
-      "description": "Name of the field containing the numerical value for each data point.",
+      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'.",
       "default": "value",
+      "required": false
+    },
+    "valueExpression": {
+      "type": "string",
+      "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
       "required": false
     },
     "username": {
