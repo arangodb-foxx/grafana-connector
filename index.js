@@ -36,8 +36,6 @@ const AGGREGATIONS = [
 ];
 
 const AGG_NAME = cfg.aggregation.toUpperCase();
-
-const AGG = aql.literal(AGG_NAME);
 const TARGETS = _.map(cfg.collections.split(","), str => str.trim());
 const ALL_TARGETS = _.flatten(_.map(TARGETS, t => _.map(AGGREGATIONS, a => t + "." + a)));
 
@@ -78,18 +76,16 @@ router
 
 router
   .post("/search", (_req, res) => {
-    if (AGG_NAME === '*') {
-      res.json(ALL_TARGETS);
-    } else {
-      res.json(TARGETS);
-    }
+    res.json(AGG_NAME === '*' ? ALL_TARGETS : TARGETS);
   })
   .summary("List the available metrics")
   .description(
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const seriesQuery = function(collection, start, end, interval) {
+const seriesQuery = function(collection, start, end, interval, aggName) {
+  const agg = aql.literal(aggName);
+
   const { filterExpression, dateField, valueField, dateExpression,
           valueExpression } = cfg;
 
@@ -105,16 +101,6 @@ const seriesQuery = function(collection, start, end, interval) {
     ? `LET v = ${valueExpression}`
     : `LET v = doc["${valueField}"]`);
 
-  require("internal").print(`
-    FOR doc IN ${collection}
-      ${dateSnippet}
-      FILTER d >= ${start} AND d < ${end}
-      ${filterSnippet}
-      ${valueSnippet}
-      COLLECT date = FLOOR(d / ${interval}) * ${interval}
-      AGGREGATE value = ${AGG}(v)
-      RETURN [value, date]
-  `);
   return query`
     FOR doc IN ${collection}
       ${dateSnippet}
@@ -122,20 +108,22 @@ const seriesQuery = function(collection, start, end, interval) {
       ${filterSnippet}
       ${valueSnippet}
       COLLECT date = FLOOR(d / ${interval}) * ${interval}
-      AGGREGATE value = ${AGG}(v)
+      AGGREGATE value = ${agg}(v)
       RETURN [value, date]
   `.toArray();
 };
 
 router
   .post("/query", (req, res) => {
-    if (!AGGREGATIONS.includes(AGG_NAME)) {
-      const allowed = AGGREGATIONS.join(", ");
-      throw new Error(
-        `Invalid service configuration. Unknown aggregation function: ${
-          cfg.aggregation
-        }, allow are ${allowed}`
-      );
+    if (AGG_NAME !== '*') {
+      if (!AGGREGATIONS.includes(AGG_NAME)) {
+        const allowed = AGGREGATIONS.join(", ");
+        throw new Error(
+          `Invalid service configuration. Unknown aggregation function: ${
+             cfg.aggregation
+           }, allow are ${allowed}`
+        );
+      }
     }
 
     const body = req.body;
@@ -143,9 +131,18 @@ router
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
-    for (const { target, type } of body.targets) {
+    for (const { tgt, type } of body.targets) {
+      let target = tgt;
+      let agg = AGG_NAME;
+
+      if (AGG_NAME === '*') {
+        const s = tgt.split('.');
+        target = s[0];
+        agg = s[1];
+      }
+
       const collection = db._collection(target);
-      const datapoints = seriesQuery(collection, start, end, interval);
+      const datapoints = seriesQuery(collection, start, end, interval, agg);
       if (type === "table") {
         response.push({
           target,
