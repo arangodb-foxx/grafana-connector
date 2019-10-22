@@ -83,8 +83,6 @@ for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
   const targetList = _.map(_.split(targets, ","), str => str.trim());
   const collectionList = _.map(_.split(collections, ","), str => str.trim());
 
-  require("console").error(collectionList);
-
   if (0 === targetList.length) {
     throw new Error(
       `Invalid service configuration: need at least one target or collection`
@@ -100,7 +98,7 @@ for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
   for (let i = 0; i < targetList.length; ++i) {
     const target = targetList[i];
     const collectionName = collectionList[i];
-    const collection = db._collection(collection);
+    const collection = db._collection(collectionName);
     const aggregations = aggregation === '*' ? AGGREGATIONS : [aggregation];
 
     if (!collection) {
