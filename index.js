@@ -108,16 +108,6 @@ const seriesQuery = function(collection, start, end, interval) {
     ? `LET v = ${valueExpression}`
     : `LET v = doc["${valueField}"]`);
 
-  require("internal").print(`
-    FOR doc IN ${collection}
-      ${dateSnippet}
-      FILTER d >= ${start} AND d < ${end}
-      ${filterSnippet}
-      ${valueSnippet}
-      COLLECT date = FLOOR(d / ${interval}) * ${interval}
-      AGGREGATE value = ${AGG}(v)
-      RETURN [value, date]
-  `);
   return query`
     FOR doc IN ${collection}
       ${dateSnippet}
