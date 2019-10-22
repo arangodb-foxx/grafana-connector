@@ -101,21 +101,25 @@ const seriesQuery = function(collection, start, end, interval) {
   if (dateExpression) {
     dateSnippet = `LET d = ${dateExpression}`;
   } else {
-    dateSnippet = `LET d = doc[${dateField}]`;
+    dateSnippet = `LET d = doc["${dateField}"]`;
   }
+
+  dateSnippet = aql.literal(dateSnippet);
 
   if (valueExpression) {
     valueSnippet = `LET v = ${valueExpression}`;
   } else {
-    valueSnippet = `LET v = doc[${valueField}]`;
+    valueSnippet = `LET v = doc["${valueField}"]`;
   }
+
+  valueSnippet = aql.literal(valueSnippet);
 
   return query`
     FOR doc IN ${collection}
       ${dateSnippet}
-      FILTER d >= ${start} AND FILTER d < ${end}
+      FILTER d >= ${start} AND d < ${end}
       ${valueSnippet}
-      COLLECT date = FLOOR(v / ${interval}) * ${interval}
+      COLLECT date = FLOOR(d / ${interval}) * ${interval}
       AGGREGATE value = ${AGG}(v)
       RETURN [value, date]
   `.toArray();
