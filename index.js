@@ -15,29 +15,31 @@ const { getAuth } = require("./util");
  *   password: string
  * }} */
 const cfg = context.configuration;
-const AGGREGATIONS = [
+const STD_AGGREGATIONS = [
   "AVERAGE",
-  "AVG",
   "COUNT",
   "COUNT_DISTINCT",
-  "COUNT_UNIQUE",
-  "LENGTH",
   "MAX",
   "MIN",
   "SORTED_UNIQUE",
-  "STDDEV",
   "STDDEV_POPULATION",
   "STDDEV_SAMPLE",
   "SUM",
   "UNIQUE",
-  "VARIANCE",
   "VARIANCE_POPULATION",
   "VARIANCE_SAMPLE"
 ];
+const AGGREGATIONS = STD_AGGREGATIONS.concat([
+  "AVG",
+  "COUNT_UNIQUE",
+  "LENGTH",
+  "STDDEV",
+  "VARIANCE"
+]);
 
 const AGG_NAME = cfg.aggregation.toUpperCase();
-const TARGETS = _.map(cfg.collections.split(","), str => str.trim());
-const ALL_TARGETS = _.flatten(_.map(TARGETS, t => _.map(AGGREGATIONS, a => t + "." + a)));
+const TARGETS = _.map((cfg.names ? cfg.names : cfg.collections.split(",")), str => str.trim());
+const ALL_TARGETS = _.flatten(_.map(TARGETS, t => _.map(STD_AGGREGATIONS, a => t + "." + a)));
 
 for (const target of TARGETS) {
   if (!db._collection(target)) {
