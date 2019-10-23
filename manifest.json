@@ -29,24 +29,24 @@
     },
     "dateField": {
       "type": "string",
-      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'.",
+      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression takes precedence.",
       "default": "date",
       "required": false
     },
     "dateExpression": {
       "type": "string",
-      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'.",
+      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression takes precedence.",
       "required": false
     },
     "valueField": {
       "type": "string",
-      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'.",
+      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'. If both are specified than 'dateExpression takes precedence.",
       "default": "value",
       "required": false
     },
     "valueExpression": {
       "type": "string",
-      "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
+      "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'. If both are specified than 'dateExpression takes precedence.",
       "required": false
     },
     "username": {

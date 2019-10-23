@@ -37,11 +37,10 @@ const allowAggregations = [
 const AGG_NAME = cfg.aggregation.toUpperCase();
 
 if (!allowAggregations.includes(AGG_NAME)) {
-  const allowed = allowAggregations.join(", ");
   throw new Error(
     `Invalid service configuration. Unknown aggregation function: ${
       cfg.aggregation
-    }, allow are ${allowed}`
+    }, allowed are ${allowAggregations.join(", ")}`
   );
 }
 
@@ -96,17 +95,22 @@ const seriesQuery = function(collection, start, end, interval) {
   const { filterExpression, dateField, valueField, dateExpression,
           valueExpression } = cfg;
 
-  let filterSnippet = aql.literal(filterExpression
-    ? `FILTER ${filterExpression}`
-    : "");
+  let filterSnippet = aql`FILTER aql.literal(
+    filterExpresssion
+    ? ${filterExpression}
+    : "true")`;
 
-  let dateSnippet = aql.literal(dateExpression
-    ? `LET d = ${dateExpression}`
-    : `LET d = doc["${dateField}"]`);
+  let dateSnippet = aql`LET d = ${
+    dateExpression
+    ? aql.literal(dateExpression)
+    : aql`doc[${dateField}]`
+  }`;
 
-  let valueSnippet = aql.literal(valueExpression
-    ? `LET v = ${valueExpression}`
-    : `LET v = doc["${valueField}"]`);
+  let valueSnippet = aql`LET v = ${
+    valueExpression
+    ? aql.literal(valueExpression)
+    : aql`doc[${valueField}]`
+  }`;
 
   return query`
     FOR doc IN ${collection}
