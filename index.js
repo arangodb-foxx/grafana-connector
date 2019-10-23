@@ -91,36 +91,24 @@ router
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const seriesQuery = function(collection, start, end, interval) {
-  const { filterExpression, dateField, valueField, dateExpression,
-          valueExpression } = cfg;
-
-  let filterSnippet = aql`FILTER aql.literal(
-    filterExpresssion
-    ? ${filterExpression}
-    : "true")`;
-
-  let dateSnippet = aql`LET d = ${
-    dateExpression
-    ? aql.literal(dateExpression)
-    : aql`doc[${dateField}]`
-  }`;
-
-  let valueSnippet = aql`LET v = ${
+const getSeries = (collection, start, end, interval) => {
+  const {
+    dateField,
+    dateExpression,
+    filterExpression,
+    valueField,
     valueExpression
-    ? aql.literal(valueExpression)
-    : aql`doc[${valueField}]`
-  }`;
+  } = cfg;
 
   return query`
     FOR doc IN ${collection}
-      ${dateSnippet}
-      FILTER d >= ${start} AND d < ${end}
-      ${filterSnippet}
-      ${valueSnippet}
-      COLLECT date = FLOOR(d / ${interval}) * ${interval}
-      AGGREGATE value = ${AGG}(v)
-      RETURN [value, date]
+    LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
+    FILTER d >= ${start} AND d < ${end}
+    ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
+    LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
+    COLLECT date = FLOOR(d / ${interval}) * ${interval}
+    AGGREGATE value = ${AGG}(v)
+    RETURN [value, date]
   `.toArray();
 };
 
@@ -133,7 +121,7 @@ router
     const response = [];
     for (const { target, type } of body.targets) {
       const collection = db._collection(target);
-      const datapoints = seriesQuery(collection, start, end, interval);
+      const datapoints = getSeries(collection, start, end, interval);
       if (type === "table") {
         response.push({
           target,
