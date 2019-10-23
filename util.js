@@ -16,7 +16,7 @@ exports.getAuth = function getAuth(req) {
     let credentials = "";
     try {
       credentials = new Buffer(match[1], "base64").toString("utf-8");
-    } catch (e) {}
+    } catch (e) {/*ignore*/}
     if (!credentials) return { basic: {} };
     const i = credentials.indexOf(":");
     if (i === -1) {
