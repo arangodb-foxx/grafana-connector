@@ -3,7 +3,7 @@
 This is an example Grafana connector for ArangoDB that can be used with the
 [Simple JSON Data Source plugin](https://grafana.com/plugins/grafana-simple-json-datasource/installation).
 
-![SimpleJSON configuration dialog](./simplejson.png)
+![SimpleJSON configuration dialog](./images/simplejson.png)
 
 ## Preparation
 
@@ -65,7 +65,7 @@ and then navigate to the _Settings_ tab in the top bar.
   should **not** match the ArangoDB user credentials used to access ArangoDB
   itself.
 
-![Foxx configuration dialog](./config.png)
+![Foxx configuration dialog](./images/config.png)
 
 ## Adding the data source
 

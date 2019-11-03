@@ -3,7 +3,7 @@
   "name": "grafana-connector",
   "description": "Example Grafana Simple JSON connector for ArangoDB.",
   "version": "1.2.0",
-  "thumbnail": "grafana.png",
+  "thumbnail": "images/grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
   },
