@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana-connector",
   "description": "Example Grafana Simple JSON connector for ArangoDB.",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "thumbnail": "images/grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
@@ -14,43 +14,111 @@
   "configuration": {
     "username": {
       "type": "string",
-      "description": "Username incoming requests should use to authenticate."
+      "required": false,
+      "description": "Username incoming requests should use to authenticate for all queries."
     },
     "password": {
       "type": "password",
       "required": false,
-      "description": "Password incoming requests should use to authenticate."
+      "description": "Password incoming requests should use to authenticate for all queries."
     },
-    "targets": {
+
+    "x1_variable": {
       "type": "string",
       "required": false,
-      "description": "Name of the targets as shown in Grafana, comma-separated. If empty, collection names will be used."
+      "description": "Comma separated list of values for x1."
     },
-    "collections": {
+    "x2_variable": {
       "type": "string",
-      "description": "Names of collections that will be exposed as targets, comma-separated."
+      "required": false,
+      "description": "Comma separated list of values for x2. Either empty or as many values as x1."
     },
+    "x3_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for x3. Either empty or as many values as x1."
+    },
+
+    "y1_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for y1."
+    },
+    "y2_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for y2. Either empty or as many values as y1."
+    },
+    "y3_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for y3. Either empty or as many values as y1."
+    },
+
+    "z1_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for z1."
+    },
+    "z2_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for z2. Either empty or as many values as z1."
+    },
+    "z3_variable": {
+      "type": "string",
+      "required": false,
+      "description": "Comma separated list of values for z3. Either empty or as many values as z1."
+    },
+
+    "target": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the target as shown in Grafana. Please note that the name can contain template variables."
+    },
+
+    "collection": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the collection. Please note that the name can contain template variables."
+    },
+
     "aggregation": {
       "type": "string",
-      "description": "Aggregation function. Should be one of SUM, AVG, MIN, MAX. You can use '*' to get them all defined.",
       "default": "*",
-      "required": false
+      "required": false,
+      "description": "Aggregation function. Should be one of SUM, AVG, MIN, MAX. You can use '*' to get them all defined."
     },
+
     "filterExpression": {
       "type": "string",
-      "description": "An AQL expression used to filter data. The current document is called 'doc'.",
-      "required": false
+      "required": false,
+      "description": "An AQL expression used to filter data. The current document is called 'doc'."
+    },
+
+    "dateName": {
+      "type": "string",
+      "default": "date",
+      "required": true,
+      "description": "Name of the field using in Grafana."
     },
     "dateField": {
       "type": "string",
-      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'.",
       "default": "date",
-      "required": false
+      "required": false,
+      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'."
     },
     "dateExpression": {
       "type": "string",
-      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'.",
-      "required": false
+      "required": false,
+      "description": "An AQL expression for the date time. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'."
+    },
+
+    "valueName": {
+      "type": "string",
+      "default": "value",
+      "required": true,
+      "description": "Name of the field using in Grafana."
     },
     "valueField": {
       "type": "string",
@@ -60,367 +128,7 @@
     },
     "valueExpression": {
       "type": "string",
-      "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
-      "required": false
-    },
-    "targets_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_1": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_2": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_3": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_4": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_5": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_6": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_7": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_8": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "targets_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "collections_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "aggregation_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "filterExpression_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateField_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "dateExpression_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueField_9": {
-      "type": "string",
-      "default": "",
-      "required": false
-    },
-    "valueExpression_9": {
-      "type": "string",
-      "default": "",
+      "description": "An AQL expression for a numerical value. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
       "required": false
     }
   }

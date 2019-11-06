@@ -1,6 +1,7 @@
 "use strict";
 const joi = require("joi");
 const _ = require("lodash");
+const Mustache = require("mustache");
 const { aql, db, query } = require("@arangodb");
 const { context } = require("@arangodb/locals");
 const createRouter = require("@arangodb/foxx/router");
@@ -32,93 +33,123 @@ const AGGREGATIONS_ALIASES = {
 /** @type {{
  *   username: string,
  *   password: string,
- *   targets: string,
- *   collections: string,
+ *   x1_variable: string,
+ *   x2_variable: string,
+ *   x3_variable: string,
+ *   y1_variable: string,
+ *   y2_variable: string,
+ *   y3_variable: string,
+ *   z1_variable: string,
+ *   z2_variable: string,
+ *   z3_variable: string,
+ *   target: string,
+ *   collection: string,
  *   aggregation: string,
  *   filterExpression: string,
+ *   dateName: string,
  *   dateField: string,
  *   dateExpression: string,
+ *   valueName: string,
  *   valueField: string,
  *   valueExpression: string
  * }} */
 const cfg = context.configuration;
 const TARGETS = {};
 
-for (let suffix of ["", "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9"]) {
-  const collections = cfg["collections" + suffix];
+const parse_variable = function(d) {
+  let values = _.map(_.split(d, ","), str => str.trim());
 
-  if (!collections) {
-    continue;
+  if (values.length === 0) {
+    values = [""];
   }
 
-  let targets = cfg["targets" + suffix];
-  const filterExpression = cfg["filterExpression" + suffix];
-  const dateField = cfg["dateField" + suffix];
-  const dateExpression = cfg["dateExpression" + suffix];
-  const valueField = cfg["valueField" + suffix];
-  const valueExpression = cfg["valueExpression" + suffix];
+  return values;
+};
 
-  let aggregation = cfg["aggregation" + suffix].toUpperCase();
+const variables = [
+  _.map(["x1", "x2", "x3"], x => parse_variable(cfg[x + "_variable"])),
+  _.map(["y1", "y2", "y3"], x => parse_variable(cfg[x + "_variable"])),
+  _.map(["z1", "z2", "z3"], x => parse_variable(cfg[x + "_variable"]))
+];
 
-  if (AGGREGATIONS_ALIASES[aggregation]) {
-    aggregation = AGGREGATIONS_ALIASES[aggregation];
-  }
+const aggregations = (cfg['aggregation'] && cfg['aggregation'] !== '*')
+      ? parse_variable(cfg['aggregation'])
+      : AGGREGATIONS;
 
-  if (!targets) {
-    targets = collections;
-  }
+{
+  const target = cfg['target'];
+  const collection = cfg['collection'];
 
-  let filterSnippet = aql.literal(filterExpression
-    ? `FILTER ${filterExpression}`
-    : "");
+  const lengths = _.map(variables, x => _.max(_.map(x, y => y.length)));
 
-  let dateSnippet = aql.literal(dateExpression
-    ? `LET d = ${dateExpression}`
-    : `LET d = doc["${dateField}"]`);
+  const view = {};
 
-  let valueSnippet = aql.literal(valueExpression
-    ? `LET v = ${valueExpression}`
-    : `LET v = doc["${valueField}"]`);
+  for (let x = 0; x < lengths[0]; ++x) {
+    view['x1'] = variables[0][0][x];
+    view['x2'] = variables[0][1][x];
+    view['x3'] = variables[0][2][x];
 
-  const targetList = _.map(_.split(targets, ","), str => str.trim());
-  const collectionList = _.map(_.split(collections, ","), str => str.trim());
+    for (let y = 0; y < lengths[1]; ++y) {
+      view['y1'] = variables[1][0][y];
+      view['y2'] = variables[1][1][y];
+      view['y3'] = variables[1][2][y];
 
-  if (0 === targetList.length) {
-    throw new Error(
-      `Invalid service configuration: need at least one target or collection`
-    );
-  }
+      for (let z = 0; z < lengths[2]; ++z) {
+        view['z1'] = variables[2][0][z];
+        view['z2'] = variables[2][1][z];
+        view['z3'] = variables[2][2][z];
 
-  if (targetList.length !== collectionList.length) {
-    throw new Error(
-      `Invalid service configuration: got ${targetList.length} targets, but ${collectionList.length} collections`
-    );
-  }
+        for (let a = 0; a < aggregations.length; ++a) {
+          view['aggregation'] = aggregations[a];
 
-  for (let i = 0; i < targetList.length; ++i) {
-    const target = targetList[i];
-    const collectionName = collectionList[i];
-    const collection = db._collection(collectionName);
-    const aggregations = aggregation === '*' ? AGGREGATIONS : [aggregation];
+          const t = Mustache.render(target, view);
 
-    if (!collection) {
-      throw new Error(
-        `Invalid service configuration. Unknown collection: ${collectionName}`
-      );
-    }
+          let { filterExpression,
+                dateName, dateField, dateExpression,
+                valueName, valueField, valueExpression } = cfg;
 
-    for (let aggregation of aggregations) {
-      let final = target + "." + aggregation;
+          filterExpression = filterExpression ? Mustache.render(filterExpression, view) : undefined;
 
-      TARGETS[final] = {
-        final,
-        target,
-        collection,
-        aggregation,
-        filterSnippet,
-        dateSnippet,
-        valueSnippet
-      };
+          dateField = dateField ? Mustache.render(dateField, view) : undefined;
+          dateName = dateName ? Mustache.render(dateName, view) : dateField;
+          dateExpression = dateExpression ? Mustache.render(dateExpression, view) : undefined;
+
+          valueField = valueField ? Mustache.render(valueField, view) : undefined;
+          valueName = valueName ? Mustache.render(valueName, view) : valueField;
+          valueExpression = valueExpression ? Mustache.render(valueExpression, view) : undefined;
+
+          let filterSnippet = aql.literal(filterExpression
+            ? `FILTER ${filterExpression}`
+            : "");
+
+          let dateSnippet = aql.literal(dateExpression
+            ? `LET d = ${dateExpression}`
+            : `LET d = doc["${dateField}"]`);
+
+          let valueSnippet = aql.literal(valueExpression
+            ? `LET v = ${valueExpression}`
+            : `LET v = doc["${valueField}"]`);
+
+          const collectionName = Mustache.render(collection, view);
+          const c = db._collection(collectionName);
+
+          if (!c) {
+            throw new Error(
+              `Invalid service configuration. Unknown collection: ${collectionName}`
+            );
+          }
+
+          TARGETS[t] = {
+            target: t,
+            collection: c,
+            dateName: dateName,
+            valueName: valueName,
+            filterSnippet: filterSnippet.toAQL(),
+            dateSnippet: dateSnippet.toAQL(),
+            valueSnippet: valueSnippet.toAQL()
+          };
+        }
+      }
     }
   }
 }
@@ -161,20 +192,31 @@ router
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const seriesQuery = function(definition, start, end, interval) {
+const seriesQuery = function(definition, start, end, interval, isTable) {
   const agg = aql.literal(definition.aggregation);
   const { collection, filterSnippet, dateSnippet, valueSnippet } = definition;
 
-  return query`
-    FOR doc IN ${collection}
-      ${dateSnippet}
-      FILTER d >= ${start} AND d < ${end}
-      ${filterSnippet}
-      ${valueSnippet}
-      COLLECT date = FLOOR(d / ${interval}) * ${interval}
-      AGGREGATE value = ${agg}(v)
-      RETURN [value, date]
-  `.toArray();
+  if (isTable) {
+    return query`
+      FOR doc IN ${collection}
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        RETURN [d, v]
+    `.toArray();
+  } else {
+    return query`
+      FOR doc IN ${collection}
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        COLLECT date = FLOOR(d / ${interval}) * ${interval}
+        AGGREGATE value = ${agg}(v)
+        RETURN [value, date]
+    `.toArray();
+  }
 };
 
 router
@@ -184,25 +226,25 @@ router
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
-    for (const { target, type } of body.targets) {
-      const definition = TARGETS[target];
-      const datapoints = definition ? seriesQuery(definition, start, end, interval) : [];
+    const definition = TARGETS[target];
+    const isTable = (type === "table");
+    const datapoints = definition ? seriesQuery(definition, start, end, interval, isTable) : [];
 
-      if (type === "table") {
-        response.push({
-          target,
-          type: "table",
-          columns: [{ text: "date" }, { text: "value" }],
-          rows: datapoints.map(([a, b]) => [b, a])
-        });
-      } else {
-        response.push({
-          target,
-          type: "timeserie",
-          datapoints
-        });
-      }
+    if (isTable) {
+      response.push({
+        target,
+        type: "table",
+        columns: [{ text: definition.dateName }, { text: definition.valueName }],
+        rows: datapoints
+      });
+    } else {
+      response.push({
+        target,
+        type: "timeserie",
+        datapoints
+      });
     }
+
     res.json(response);
   })
   .body(
