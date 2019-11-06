@@ -211,6 +211,7 @@ const seriesQuery = function(definition, start, end, interval, isTable) {
         FILTER d >= ${start} AND d < ${end}
         ${filterSnippet}
         ${valueSnippet}
+        SORT d
         RETURN [d, v]
     `.toArray();
   } else {
@@ -222,6 +223,7 @@ const seriesQuery = function(definition, start, end, interval, isTable) {
         ${valueSnippet}
         COLLECT date = FLOOR(d / ${interval}) * ${interval}
         AGGREGATE value = ${agg}(v)
+        SORT date
         RETURN [value, date]
     `.toArray();
   }
