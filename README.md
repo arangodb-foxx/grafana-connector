@@ -40,26 +40,48 @@ service using the web interface or the Foxx CLI.
 To configure the service in the ArangoDB web interface, open the service details
 and then navigate to the _Settings_ tab in the top bar.
 
-- **collections**: list of names of collections that will be exposed to Grafana,
-  as a comma-separated list, e.g. `payments,timeouts` will expose the collections
-  `payments` and `timeouts` in the database the service was installed.
+- **username** and **password**: credentials that will be used by the Grafana
+  data source to authenticate against this service.
+
+- **x1_variable**, **x2_variable**, **x3_variable**: comma separated list of values
+  for `x1`, `x2`, `x3`.
+
+- **y1_variable**, **y2_variable**, **y3_variable**: comma separated list of values
+  for `y1`, `y2`, `y3`.
+
+- **z1_variable**, **z2_variable**, **z3_variable**: comma separated list of values
+  for `z1`, `z2`, `z3`.
+
+- **target**: the name of the target. This is can by a mustache string.
+
+- **collection**: the name of the collection. This is can by a mustache string.
 
 - **aggregation** (default: `SUM`): name of the
   [AQL aggregation function](https://docs.arangodb.com/3.4/AQL/Operations/Collect.html#aggregation)
   that will be used to aggregate results for Grafana. Should be one of `SUM`,
   `AVG` (`AVERAGE`), `MIN` or `MAX`.
 
+- **filterExpression** (default: `date`): an AQL expression used to filter data.
+  The current document is called 'doc'.
+
+- **dateName** (default: `date`): name of row returned in table queries.
+
 - **dateField** (default: `date`): name of the field on each document that will
   be used to find the documents relevant for each time range. The value of this
   field should be expressed in milliseconds since the start of the UNIX epoch.
+
+- **dateExpression**: an AQL expression for a numerical value. The current
+  document is called `doc`. Either set `dateField` or `dateExpression`.
+
+- **valueName** (default: `date`): name of row returned in table queries.
 
 - **valueField** (default: `value`): name of the field on each document that
   will be used to determine the value for that document. The value of this
   field must be numeric and may be aggregated when Grafana requests data for
   long time ranges.
 
-- **username** and **password**: credentials that will be used by the Grafana
-  data source to authenticate against this service.
+- **valueExpression**: an AQL expression for a numerical value. The current
+  document is called `doc`. Either set `valueField` or `valueExpression`.
 
   **Note**: These credentials will only be used by the Grafana data source and
   should **not** match the ArangoDB user credentials used to access ArangoDB

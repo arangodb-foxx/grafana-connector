@@ -72,8 +72,14 @@ const variables = [
   _.map(["z1", "z2", "z3"], x => parse_variable(cfg[x + "_variable"]))
 ];
 
-const aggregations = (cfg['aggregation'] && cfg['aggregation'] !== '*')
-      ? parse_variable(cfg['aggregation'])
+let agg = cfg['aggregation'];
+
+if (AGGREGATIONS_ALIASES[agg]) {
+  agg = AGGREGATIONS_ALIASES[agg];
+}
+
+const aggregations = (agg && agg !== '*')
+      ? parse_variable(agg)
       : AGGREGATIONS;
 
 {
@@ -226,23 +232,26 @@ router
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
-    const definition = TARGETS[target];
-    const isTable = (type === "table");
-    const datapoints = definition ? seriesQuery(definition, start, end, interval, isTable) : [];
 
-    if (isTable) {
-      response.push({
-        target,
-        type: "table",
-        columns: [{ text: definition.dateName }, { text: definition.valueName }],
-        rows: datapoints
-      });
-    } else {
-      response.push({
-        target,
-        type: "timeserie",
-        datapoints
-      });
+    for (const { target, type } of body.targets) {
+      const definition = TARGETS[target];
+      const isTable = (type === "table");
+      const datapoints = definition ? seriesQuery(definition, start, end, interval, isTable) : [];
+
+      if (isTable) {
+        response.push({
+          target,
+          type: "table",
+          columns: [{ text: definition.dateName }, { text: definition.valueName }],
+          rows: datapoints
+        });
+      } else {
+        response.push({
+          target,
+          type: "timeserie",
+          datapoints
+        });
+      }
     }
 
     res.json(response);
