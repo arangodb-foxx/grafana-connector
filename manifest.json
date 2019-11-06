@@ -104,7 +104,6 @@
     },
     "dateField": {
       "type": "string",
-      "default": "date",
       "required": false,
       "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'."
     },
@@ -122,14 +121,13 @@
     },
     "valueField": {
       "type": "string",
-      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'.",
-      "default": "value",
-      "required": false
+      "required": false,
+      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'."
     },
     "valueExpression": {
       "type": "string",
-      "description": "An AQL expression for a numerical value. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'.",
-      "required": false
+      "required": false,
+      "description": "An AQL expression for a numerical value. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'."
     }
   }
 }

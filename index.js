@@ -106,7 +106,8 @@ const aggregations = (agg && agg !== '*')
         view['z3'] = variables[2][2][z];
 
         for (let a = 0; a < aggregations.length; ++a) {
-          view['aggregation'] = aggregations[a];
+          const aggregation = aggregations[a];
+          view['aggregation'] = aggregation;
 
           const t = Mustache.render(target, view);
 
@@ -148,11 +149,12 @@ const aggregations = (agg && agg !== '*')
           TARGETS[t] = {
             target: t,
             collection: c,
-            dateName: dateName,
-            valueName: valueName,
-            filterSnippet: filterSnippet.toAQL(),
-            dateSnippet: dateSnippet.toAQL(),
-            valueSnippet: valueSnippet.toAQL()
+            aggregation,
+            dateName,
+            valueName,
+            filterSnippet,
+            dateSnippet,
+            valueSnippet
           };
         }
       }
