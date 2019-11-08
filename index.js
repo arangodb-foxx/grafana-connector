@@ -115,28 +115,6 @@ const aggregations = (agg && agg !== '*')
                 dateName, dateField, dateExpression,
                 valueName, valueField, valueExpression } = cfg;
 
-          filterExpression = filterExpression ? Mustache.render(filterExpression, view) : undefined;
-
-          dateField = dateField ? Mustache.render(dateField, view) : undefined;
-          dateName = dateName ? Mustache.render(dateName, view) : dateField;
-          dateExpression = dateExpression ? Mustache.render(dateExpression, view) : undefined;
-
-          valueField = valueField ? Mustache.render(valueField, view) : undefined;
-          valueName = valueName ? Mustache.render(valueName, view) : valueField;
-          valueExpression = valueExpression ? Mustache.render(valueExpression, view) : undefined;
-
-          let filterSnippet = aql.literal(filterExpression
-            ? `FILTER ${filterExpression}`
-            : "");
-
-          let dateSnippet = aql.literal(dateExpression
-            ? `LET d = ${dateExpression}`
-            : `LET d = doc["${dateField}"]`);
-
-          let valueSnippet = aql.literal(valueExpression
-            ? `LET v = ${valueExpression}`
-            : `LET v = doc["${valueField}"]`);
-
           const collectionName = Mustache.render(collection, view);
           const c = db._collection(collectionName);
 
@@ -149,12 +127,11 @@ const aggregations = (agg && agg !== '*')
           TARGETS[t] = {
             target: t,
             collection: c,
+            view: _.clone(view),
             aggregation,
-            dateName,
-            valueName,
-            filterSnippet,
-            dateSnippet,
-            valueSnippet
+            filterExpression,
+            dateField, dateName, dateExpression,
+            valueField, valueName, valueExpression
           };
         }
       }
@@ -200,9 +177,37 @@ router
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const seriesQuery = function(definition, start, end, interval, isTable) {
+const seriesQuery = function(definition, start, end, interval, data, isTable) {
   const agg = aql.literal(definition.aggregation);
-  const { collection, filterSnippet, dateSnippet, valueSnippet } = definition;
+  const { collection, view } = definition;
+
+  let { filterExpression,
+        dateName, dateField, dateExpression,
+        valueName, valueField, valueExpression } = definition;
+
+  let v = _.assign({}, view, data);
+
+  filterExpression = filterExpression ? Mustache.render(filterExpression, v) : undefined;
+
+  dateField = dateField ? Mustache.render(dateField, v) : undefined;
+  definition.dateName = dateName ? Mustache.render(dateName, v) : dateField;
+  dateExpression = dateExpression ? Mustache.render(dateExpression, v) : undefined;
+
+  valueField = valueField ? Mustache.render(valueField, v) : undefined;
+  definition.valueName = valueName ? Mustache.render(valueName, v) : valueField;
+  valueExpression = valueExpression ? Mustache.render(valueExpression, v) : undefined;
+
+  let filterSnippet = aql.literal(filterExpression
+    ? `FILTER ${filterExpression}`
+    : "");
+
+  let dateSnippet = aql.literal(dateExpression
+    ? `LET d = ${dateExpression}`
+    : `LET d = doc["${dateField}"]`);
+
+  let valueSnippet = aql.literal(valueExpression
+    ? `LET v = ${valueExpression}`
+    : `LET v = doc["${valueField}"]`);
 
   if (isTable) {
     return query`
@@ -237,10 +242,10 @@ router
     const end = Number(new Date(body.range.to));
     const response = [];
 
-    for (const { target, type } of body.targets) {
-      const definition = TARGETS[target];
+    for (const { target, type, data } of body.targets) {
+      const definition = _.merge({}, TARGETS[target]);
       const isTable = (type === "table");
-      const datapoints = definition ? seriesQuery(definition, start, end, interval, isTable) : [];
+      const datapoints = definition ? seriesQuery(definition, start, end, interval, data, isTable) : [];
 
       if (isTable) {
         response.push({
