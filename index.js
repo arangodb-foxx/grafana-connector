@@ -243,6 +243,8 @@ router
     const response = [];
 
     for (let { target, type, data } of body.targets) {
+      let original = target;
+
       if (data.alias) {
         target = data.alias;
       }
@@ -260,7 +262,7 @@ router
         });
       } else {
         response.push({
-          target,
+          target: original,
           type: "timeserie",
           datapoints
         });
