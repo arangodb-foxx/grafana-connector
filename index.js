@@ -255,7 +255,7 @@ router
 
       if (isTable) {
         response.push({
-          target,
+          target: original,
           type: "table",
           columns: [{ text: definition.dateName }, { text: definition.valueName }],
           rows: datapoints
