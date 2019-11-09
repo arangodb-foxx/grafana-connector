@@ -242,7 +242,11 @@ router
     const end = Number(new Date(body.range.to));
     const response = [];
 
-    for (const { target, type, data } of body.targets) {
+    for (let { target, type, data } of body.targets) {
+      if (data.alias) {
+        target = data.alias;
+      }
+
       const definition = _.merge({}, TARGETS[target]);
       const isTable = (type === "table");
       const datapoints = definition ? seriesQuery(definition, start, end, interval, data, isTable) : [];
