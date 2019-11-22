@@ -170,9 +170,10 @@ router
           break;
 
         case "plugin_instance":
-//          let tempStr = combinedProps[propName];
-          let tempStr = combinedProps[propName] + "%";
-          queryStr = aql.join([queryStr, aql`FILTER doc.plugin_instance LIKE ${tempStr}`])
+          let tempStr = combinedProps[propName];
+          queryStr = aql.join([queryStr, aql`FILTER doc.plugin_instance == ${combinedProps[propName]}`])
+//slow          let tempStr = combinedProps[propName] + "%";
+//slow          queryStr = aql.join([queryStr, aql`FILTER doc.plugin_instance LIKE ${tempStr}`])
           break;
 
         case "type":
