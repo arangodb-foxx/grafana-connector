@@ -31,7 +31,8 @@ const allowAggregations = [
   "UNIQUE",
   "VARIANCE",
   "VARIANCE_POPULATION",
-  "VARIANCE_SAMPLE"
+  "VARIANCE_SAMPLE",
+  "NONE"
 ];
 
 const AGG_NAME = cfg.aggregation.toUpperCase();
@@ -44,7 +45,7 @@ if (!allowAggregations.includes(AGG_NAME)) {
   );
 }
 
-const AGG = aql.literal(AGG_NAME);
+const AGG = AGG_NAME === "NONE" ? null : aql.literal(AGG_NAME);
 const TARGETS = cfg.collections.split(",").map(str => str.trim());
 
 for (const target of TARGETS) {
@@ -100,16 +101,27 @@ const getSeries = (collection, start, end, interval) => {
     valueExpression
   } = cfg;
 
-  return query`
-    FOR doc IN ${collection}
-    LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
-    FILTER d >= ${start} AND d < ${end}
-    ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
-    LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
-    COLLECT date = FLOOR(d / ${interval}) * ${interval}
-    AGGREGATE value = ${AGG}(v)
-    RETURN [value, date]
-  `.toArray();
+  if (AGG) {
+    return query`
+      FOR doc IN ${collection}
+      LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
+      FILTER d >= ${start} AND d < ${end}
+      ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
+      LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
+      COLLECT date = FLOOR(d / ${interval}) * ${interval}
+      AGGREGATE value = ${AGG}(v)
+      RETURN [value, date]
+    `.toArray();
+  } else {
+    return query`
+      FOR doc IN ${collection}
+      LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
+      FILTER d >= ${start} AND d < ${end}
+      ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
+      LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
+      RETURN [v, d]
+    `.toArray();
+  }
 };
 
 router
