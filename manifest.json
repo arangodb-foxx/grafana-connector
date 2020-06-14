@@ -85,9 +85,9 @@
 
     "aggregation": {
       "type": "string",
-      "default": "*",
-      "required": false,
-      "description": "Aggregation function. Should be one of SUM, AVG, MIN, MAX. You can use '*' to get them all defined."
+      "description": "Aggregation function. Should be one of AVG, COUNT, COUNT_DISTINCT, MAX, MIN, SORTED_UNIQUE, STDDEV, STDDEV_SAMPLE, SUM, UNIQUE, VARIANCE, VARIANCE_SAMPLE, NONE. You can use '*' to get them all defined except 'NONE'.",
+      "default": "SUM",
+      "required": false
     },
 
     "filterExpression": {
@@ -98,6 +98,7 @@
 
     "dateName": {
       "type": "string",
+      "description": "Name of the field containing the date time for each data point. Note that this cannot be a nested attribute. Use 'dateExpression' in this case. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression' takes precedence.",
       "default": "date",
       "required": true,
       "description": "Name of the field using in Grafana."
@@ -111,10 +112,13 @@
       "type": "string",
       "required": false,
       "description": "An AQL expression for the date time. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'."
+      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression' takes precedence.",
+      "required": false
     },
 
     "valueName": {
       "type": "string",
+      "description": "Name of the field containing the numerical value for each data point. Note that this cannot be a nested attribute. Use 'valueExpression' in this case. Either set 'valueField' or 'valueExpression'. If both are specified than 'valueExpression' takes precedence.",
       "default": "value",
       "required": true,
       "description": "Name of the field using in Grafana."
@@ -123,6 +127,8 @@
       "type": "string",
       "required": false,
       "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'."
+      "description": "Name of the field containing the numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'. If both are specified than 'valueExpression' takes precedence.",
+      "required": false
     },
     "valueExpression": {
       "type": "string",

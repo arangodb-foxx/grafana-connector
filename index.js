@@ -19,7 +19,8 @@ const AGGREGATIONS = [
   "SUM",
   "UNIQUE",
   "VARIANCE_POPULATION",
-  "VARIANCE_SAMPLE"
+  "VARIANCE_SAMPLE",
+  "NONE"
 ];
 
 const AGGREGATIONS_ALIASES = {
@@ -222,14 +223,11 @@ const seriesQuery = function(definition, start, end, interval, data, isTable) {
   } else {
     return query`
       FOR doc IN ${collection}
-        ${dateSnippet}
-        FILTER d >= ${start} AND d < ${end}
-        ${filterSnippet}
-        ${valueSnippet}
-        COLLECT date = FLOOR(d / ${interval}) * ${interval}
-        AGGREGATE value = ${agg}(v)
-        SORT date
-        RETURN [value, date]
+      LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
+      FILTER d >= ${start} AND d < ${end}
+      ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
+      LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
+      RETURN [v, d]
     `.toArray();
   }
 };
