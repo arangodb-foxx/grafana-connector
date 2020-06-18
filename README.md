@@ -43,50 +43,54 @@ and then navigate to the _Settings_ tab in the top bar.
 - **username** and **password**: credentials that will be used by the Grafana
   data source to authenticate against this service.
 
-- **x1_variable**, **x2_variable**, **x3_variable**: comma separated list of values
-  for `x1`, `x2`, `x3`.
-
-- **y1_variable**, **y2_variable**, **y3_variable**: comma separated list of values
-  for `y1`, `y2`, `y3`.
-
-- **z1_variable**, **z2_variable**, **z3_variable**: comma separated list of values
-  for `z1`, `z2`, `z3`.
-
-- **target**: the name of the target. This is can by a mustache string.
-
-- **collection**: the name of the collection. This is can by a mustache string.
-
-- **aggregation** (default: `SUM`): name of the
-  [AQL aggregation function](https://docs.arangodb.com/3.4/AQL/Operations/Collect.html#aggregation)
-  that will be used to aggregate results for Grafana. Should be one of `SUM`,
-  `AVG` (`AVERAGE`), `MIN` or `MAX`.
-
-- **filterExpression** (default: empty): an AQL expression used to filter documents.
-  The current document is called `doc`.
-
-- **dateField** (default: `date`): name of the field on each document that will
-  be used to find the documents relevant for each time range. The value of this
-  field should be expressed in milliseconds since the start of the UNIX epoch.
-
-- **dateExpression** (default: empty): an AQL expression to compute the date.
-  The current document is called `doc`. This takes precendence over the
-  dateField.
-
-- **valueField** (default: `value`): name of the field on each document that
-  will be used to determine the value for that document. The value of this
-  field must be numeric and may be aggregated when Grafana requests data for
-  long time ranges.
-
-- **valueExpression** (default: empty): an AQL expression to compute the value.
-  The current document is called `doc`. This takes precendence over the
-  dateField.
-
-- **username** and **password**: credentials that will be used by the Grafana
-  data source to authenticate against this service.
-
   **Note**: These credentials will only be used by the Grafana data source and
   should **not** match the ArangoDB user credentials used to access ArangoDB
   itself.
+
+- **target**:
+  Name of the target as shown in the Grafana Metric field. Please note that the name can contain
+  template variables.
+
+- **alias**:
+  Name of the target as shown in the Grafana graph. Please note that the name can contain template
+  variables.
+
+- **collection**:
+  Name of the collection. Please note that the name can contain template variables.
+
+- **aggregation** (default: `SUM`):
+  [AQL aggregation function](https://docs.arangodb.com/3.4/AQL/Operations/Collect.html#aggregation)
+  that will be used to aggregate results for Grafana. Should be one of AVG, COUNT, COUNT_DISTINCT,
+  MAX, MIN, SORTED_UNIQUE, STDDEV, STDDEV_SAMPLE, SUM, UNIQUE, VARIANCE, VARIANCE_SAMPLE, NONE.
+  You can use '*' to get them all defined except 'NONE'.
+
+- **filterExpression** (default: empty):
+  An AQL expression used to filter data. The current document is called 'doc'. You can use a Mustache
+  like syntax to include variables. For example, doc.name == '{{grafana.name}}'.
+
+- **dateName**:
+  Name of the field containing the date time for each data point. This is only used for Grafana to
+  name the data-point.
+
+- **dateField** (default: `date`):
+  Name of the field containing the date time for each data point. Either a top-level attribute
+  name or an AQL expression. In the latter case, The current document is called 'doc'. The
+  value of this field should be expressed in milliseconds since the start of the UNIX epoch.
+
+- **valueField** (default: `value`):
+  Name of the field containing the numerical value for each data point. Either a top-level
+  attribute name or an AQL expression. In the latter case, The current document is called 'doc'.
+
+- **multiValueTemplateVariables** (default: empty):
+  A comma-separated list of template variables that should be treated as multi-target
+  variables. For example, if you have a Grafana variable 'size' which contains 'small'
+  and 'big', then two runs will be done for the above expressions. The first one will
+  set 'grafana.size' to 'small' and the second to 'big'.
+
+- **templateVariables** (default: empty):
+  A JSON object that describes the values for template variables. In Grafana create
+  a Query named QUERY (in Query Options). For each such query, create a key QUERY
+  and an AQL as value. For example, { \"size\": \"FOR doc IN sizes RETURN DISTINCT doc.name\" }.
 
 ![Foxx configuration dialog](./images/config.png)
 

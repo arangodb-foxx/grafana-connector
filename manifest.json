@@ -66,7 +66,7 @@
     "dateField": {
       "type": "string",
       "required": false,
-      "description": "Name of the field containing the date time for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'."
+      "description": "Name of the field containing the date time for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'. The value of this field should be expressed in milliseconds since the start of the UNIX epoch."
     },
 
     "valueName": {
