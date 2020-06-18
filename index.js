@@ -245,12 +245,12 @@ router
     const unravel = function() { return [].slice.call(arguments); };
 
     const grafana = {};
-    const multiKeys = [];
+    let multiKeys = [];
     let multiValues = [];
 
     if (cfg['multiValueTemplateVariables']) {
       let d = cfg['multiValueTemplateVariables'];
-      multiValues = _.map(_.split(d, ","), str => str.trim());
+      multiKeys = _.map(_.split(d, ","), str => str.trim());
     }
 
     for (let key of multiKeys) {
