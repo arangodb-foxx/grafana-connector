@@ -2,8 +2,8 @@
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana-connector",
   "description": "Example Grafana Simple JSON connector for ArangoDB.",
-  "version": "1.1.0",
-  "thumbnail": "grafana.png",
+  "version": "2.0.0",
+  "thumbnail": "images/grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
   },
@@ -12,51 +12,90 @@
   "license": "Apache-2.0",
   "main": "index.js",
   "configuration": {
-    "collections": {
-      "type": "string",
-      "description": "Names of collections that will be exposed as targets, comma-separated."
-    },
-    "aggregation": {
-      "type": "string",
-      "description": "Aggregation function. Should be one of SUM, AVG, MIN, MAX.",
-      "default": "SUM",
-      "required": false
-    },
-    "filterExpression": {
-      "type": "string",
-      "description": "An AQL expression used to filter data. The current document is called 'doc'.",
-      "required": false
-    },
-    "dateField": {
-      "type": "string",
-      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression takes precedence.",
-      "default": "date",
-      "required": false
-    },
-    "dateExpression": {
-      "type": "string",
-      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression takes precedence.",
-      "required": false
-    },
-    "valueField": {
-      "type": "string",
-      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'. If both are specified than 'dateExpression takes precedence.",
-      "default": "value",
-      "required": false
-    },
-    "valueExpression": {
-      "type": "string",
-      "description": "An AQL expression for a numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'. If both are specified than 'dateExpression takes precedence.",
-      "required": false
-    },
     "username": {
       "type": "string",
-      "description": "Username incoming requests should use to authenticate."
+      "required": false,
+      "description": "Username incoming requests should use to authenticate for all queries."
     },
+
     "password": {
       "type": "password",
       "required": false,
-      "description": "Password incoming requests should use to authenticate."
+      "description": "Password incoming requests should use to authenticate for all queries."
+    },
+
+    "target": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the target as shown in the Grafana Metric field. Please note that the name can contain template variables."
+    },
+
+    "alias": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the target as shown in the Grafana graph. Please note that the name can contain template variables."
+    },
+
+    "collection": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the collection. Please note that the name can contain template variables."
+    },
+
+    "aggregation": {
+      "type": "string",
+      "description": "Aggregation function. Should be one of AVG, COUNT, COUNT_DISTINCT, MAX, MIN, SORTED_UNIQUE, STDDEV, STDDEV_SAMPLE, SUM, UNIQUE, VARIANCE, VARIANCE_SAMPLE, NONE. You can use '*' to get them all defined except 'NONE'.",
+      "default": "SUM",
+      "required": false
+    },
+
+    "filterExpression": {
+      "type": "string",
+      "required": false,
+      "description": "An AQL expression used to filter data. The current document is called 'doc'. You can use a Mustache like syntax to include variables. For example, doc.name == '{{grafana.name}}'."
+    },
+
+    "dateName": {
+      "type": "string",
+      "description": "Name of the field containing the date time for each data point. This is only used for Grafana to name the data-point.",
+      "default": "date",
+      "required": true,
+      "description": "Name of the field using in Grafana."
+    },
+
+    "dateField": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the field containing the date time for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'. The value of this field should be expressed in milliseconds since the start of the UNIX epoch."
+    },
+
+    "valueName": {
+      "type": "string",
+      "description": "Name of the field containing the numerical value for each data point. This is only used for Grafana to the data-point.",
+      "default": "value",
+      "required": true,
+      "description": "Name of the field using in Grafana."
+    },
+
+    "valueField": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the field containing the numerical value for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'.",
+      "required": false
+    },
+
+    "multiValueTemplateVariables": {
+      "type": "string",
+      "required": false,
+	"description": "A comma-separated list of template variables that should be treated as multi-target variables. For example, if you have a Grafana variable 'size' which contains 'small' and 'big', then two runs will be done for the above expressions. The first one will set 'grafana.size' to 'small' and the second to 'big'.",
+      "required": false
+    },
+
+    "templateVariables": {
+      "type": "json",
+      "required": false,
+      "description": "A JSON object that describes the values for template variables. In Grafana create a Query named QUERY (in Query Options). For each such query, create a key QUERY and an AQL as value. For example, { \"size\": \"FOR doc IN sizes RETURN DISTINCT doc.name\" }.",
+      "required": false
     }
   }
 }

@@ -1,59 +1,121 @@
 "use strict";
 const joi = require("joi");
+const _ = require("lodash");
+const Mustache = require("mustache");
 const { aql, db, query } = require("@arangodb");
 const { context } = require("@arangodb/locals");
 const createRouter = require("@arangodb/foxx/router");
 const { getAuth } = require("./util");
 
-/** @type {{
- *   collections: string,
- *   aggregation: string,
- *   dateField: string,
- *   valueField: string,
- *   username: string,
- *   password: string
- * }} */
-const cfg = context.configuration;
-const allowAggregations = [
+function* cartesian(args) {
+  let remainder = args.length > 1 ? cartesian(args.slice(1)) : [[]];
+  for (let r of remainder)
+    for (let h of args[0])
+      yield [h, ...r];
+}
+
+const AGGREGATIONS = [
   "AVERAGE",
-  "AVG",
   "COUNT",
   "COUNT_DISTINCT",
-  "COUNT_UNIQUE",
-  "LENGTH",
   "MAX",
   "MIN",
   "SORTED_UNIQUE",
-  "STDDEV",
   "STDDEV_POPULATION",
   "STDDEV_SAMPLE",
   "SUM",
   "UNIQUE",
-  "VARIANCE",
   "VARIANCE_POPULATION",
-  "VARIANCE_SAMPLE"
+  "VARIANCE_SAMPLE",
+  "NONE"
 ];
 
-const AGG_NAME = cfg.aggregation.toUpperCase();
+const AGGREGATIONS_ALIASES = {
+  "AVG": "AVERAGE",
+  "COUNT_UNIQUE": "COUNT_DISTINCT",
+  "LENGTH": "COUNT",
+  "STDDEV": "STDDEV_POPULATION",
+  "VARIANCE": "VARIANCE_POPULATION"
+};
 
-if (!allowAggregations.includes(AGG_NAME)) {
-  throw new Error(
-    `Invalid service configuration. Unknown aggregation function: ${
-      cfg.aggregation
-    }, allowed are ${allowAggregations.join(", ")}`
-  );
+const ATTRIBUTE_NAME = RegExp("^[a-zA-Z][a-zA-Z0-9_]*$");
+
+/** @type {{
+ *   username: string,
+ *   password: string,
+ *   target: string,
+ *   collection: string,
+ *   aggregation: string,
+ *   filterExpression: string,
+ *   dateName: string,
+ *   dateField: string,
+ *   valueName: string,
+ *   valueField: string
+ * }} */
+const cfg = context.configuration;
+const TARGETS = {};
+
+const parse_variable = function(d) {
+  let values = _.map(_.split(d, ","), str => str.trim());
+
+  if (values.length === 0) {
+    values = [""];
+  }
+
+  return values;
+};
+
+let agg = cfg['aggregation'];
+agg = agg ? agg.toUpperCase(agg) : null;
+
+if (AGGREGATIONS_ALIASES[agg]) {
+  agg = AGGREGATIONS_ALIASES[agg];
 }
 
-const AGG = aql.literal(AGG_NAME);
-const TARGETS = cfg.collections.split(",").map(str => str.trim());
+const aggregations = (agg && agg !== '*')
+      ? parse_variable(agg)
+      : AGGREGATIONS;
 
-for (const target of TARGETS) {
-  if (!db._collection(target)) {
-    throw new Error(
-      `Invalid service configuration. Unknown collection: ${target}`
-    );
+{
+  const target = cfg['target'];
+  const collection = cfg['collection'];
+
+  const view = {};
+
+  for (let a = 0; a < aggregations.length; ++a) {
+    const aggregation = aggregations[a];
+    view['aggregation'] = aggregation;
+
+    const t = Mustache.render(target, view);
+
+    let { filterExpression,
+          dateName, dateField,
+          valueName, valueField,
+          alias } = cfg;
+
+    const collectionName = Mustache.render(collection, view);
+    const c = db._collection(collectionName);
+
+    if (!c) {
+      throw new Error(
+        `Invalid service configuration. Unknown collection: ${collectionName}`
+      );
+    }
+
+    TARGETS[t] = {
+      target: t,
+      alias,
+      collection: c,
+      view: _.clone(view),
+      aggregation,
+      filterExpression,
+      dateField, dateName,
+      valueField, valueName,
+    };
   }
 }
+
+const TARGET_KEYS = _.keys(TARGETS);
 
 const router = createRouter();
 context.use(router);
@@ -83,33 +145,94 @@ router
   );
 
 router
-  .post("/search", (_req, res) => {
-    res.json(TARGETS);
+  .post("/search", (req, res) => {
+    const body = req.body;
+
+    if (body) {
+      const j = JSON.parse(body);
+
+      if (j.target) {
+        const target = j.target;
+        const tv = cfg['templateVariables'];
+
+        if (tv[target]) {
+          const values = db._query(tv[target]).toArray();
+          res.json(values);
+          return;
+        }
+      }
+    }
+    
+    res.json(TARGET_KEYS);
   })
   .summary("List the available metrics")
   .description(
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const getSeries = (collection, start, end, interval) => {
-  const {
-    dateField,
-    dateExpression,
-    filterExpression,
-    valueField,
-    valueExpression
-  } = cfg;
+const seriesQuery = function(definition, vars, start, end, interval, isTable) {
+  const agg = definition.aggregation && definition.aggregation !== "NONE"
+        ? aql.literal(definition.aggregation)
+        : null;
+  const { collection } = definition;
 
-  return query`
-    FOR doc IN ${collection}
-    LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
-    FILTER d >= ${start} AND d < ${end}
-    ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
-    LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
-    COLLECT date = FLOOR(d / ${interval}) * ${interval}
-    AGGREGATE value = ${AGG}(v)
-    RETURN [value, date]
-  `.toArray();
+  let { filterExpression,
+        dateName, dateField,
+        valueName, valueField } = definition;
+
+  filterExpression = filterExpression ? Mustache.render(filterExpression, vars) : undefined;
+
+  dateField = dateField ? Mustache.render(dateField, vars) : undefined;
+  definition.dateName = dateName ? Mustache.render(dateName, vars) : dateField;
+
+  valueField = valueField ? Mustache.render(valueField, vars) : undefined;
+  definition.valueName = valueName ? Mustache.render(valueName, vars) : valueField;
+
+  let filterSnippet = aql.literal(filterExpression
+    ? `FILTER ${filterExpression}`
+    : "");
+
+  let dateSnippet = aql.literal(ATTRIBUTE_NAME.test(dateField)
+    ? `LET d = doc["${dateField}"]`
+    : `LET d = ${dateField}`);
+
+  let valueSnippet = aql.literal(ATTRIBUTE_NAME.test(valueField)
+    ? `LET v = doc["${valueField}"]`
+    : `LET v = ${valueField}`);
+
+  if (isTable) {
+    return query`
+      FOR doc IN ${collection}
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        SORT d
+        RETURN [d, v]
+    `.toArray();
+  } else if (agg) {
+    return query`
+      FOR doc IN ${collection}
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        COLLECT date = FLOOR(d / ${interval}) * ${interval}
+        AGGREGATE value = ${agg}(v)
+        SORT date
+        RETURN [value, date]
+    `.toArray();
+  } else {
+    return query`
+      FOR doc IN ${collection}
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        SORT d
+        RETURN [v, d]
+    `.toArray();
+  }
 };
 
 router
@@ -119,24 +242,94 @@ router
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
-    for (const { target, type } of body.targets) {
-      const collection = db._collection(target);
-      const datapoints = getSeries(collection, start, end, interval);
-      if (type === "table") {
-        response.push({
-          target,
-          type: "table",
-          columns: [{ text: "date" }, { text: "value" }],
-          rows: datapoints.map(([a, b]) => [b, a])
-        });
-      } else {
-        response.push({
-          target,
-          type: "timeserie",
-          datapoints
-        });
+    const unravel = function() { return [].slice.call(arguments); };
+
+    const grafana = {};
+    let multiKeys = [];
+    let multiValues = [];
+
+    if (cfg['multiValueTemplateVariables']) {
+      let d = cfg['multiValueTemplateVariables'];
+      multiKeys = _.map(_.split(d, ","), str => str.trim());
+    }
+
+    for (let key of multiKeys) {
+      if (key in body.scopedVars) {
+        let value = body.scopedVars[key].value;
+
+	if (!Array.isArray(value)) {
+	   value = [value];
+	}
+
+	let l = [];
+
+	for (let v of value) {
+  	  let obj = {};
+          obj[key] = v;
+	  l.push(obj);
+	}
+
+	multiValues.push(l);
       }
     }
+
+    if (multiValues.length > 0) {
+      multiValues = unravel(...cartesian(multiValues));
+    } else {
+      multiValues = [[{}]];
+    }
+
+    for (let key of Object.keys(body.scopedVars)) {
+      if (key[0] !== '_' && !multiValues.includes(key)) {
+        const val = body.scopedVars[key];
+        grafana[key] = val.value;
+      }
+    }
+          
+    for (let mv of multiValues) {
+      for (let { target, type, data } of body.targets) {
+        let original = target;
+        const targetDef = TARGETS[original];
+
+        if (!targetDef) {
+          throw Error(`unknown target ${original}`);
+        }
+
+        const definition = _.merge({}, targetDef);
+        const vars = _.assign({grafana}, definition.view, data);
+
+        for (let m of mv) {
+          vars.grafana = _.assign(vars.grafana, m);
+        }
+
+        if (targetDef.alias) {
+           target = Mustache.render(targetDef.alias, vars);
+        }
+
+        if (data && data.alias) {
+          target = data.alias;
+        }
+
+        const isTable = (type === "table");
+        const datapoints = definition ? seriesQuery(definition, vars, start, end, interval, isTable) : [];
+
+        if (isTable) {
+          response.push({
+            target: target,
+            type: "table",
+            columns: [{ text: definition.dateName }, { text: definition.valueName }],
+            rows: datapoints
+          });
+        } else {
+          response.push({
+            target: target,
+            type: "timeserie",
+            datapoints
+          });
+        }
+      }
+    }
+
     res.json(response);
   })
   .body(
@@ -155,7 +348,7 @@ router
           .items(
             joi
               .object({
-                target: joi.allow(...TARGETS).required(),
+                target: joi.allow(...TARGET_KEYS).required(),
                 type: joi.allow("timeserie", "table").required()
               })
               .required()
