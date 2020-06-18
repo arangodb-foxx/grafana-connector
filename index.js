@@ -254,7 +254,7 @@ router
     }
 
     for (let key of multiKeys) {
-      if (body.scopedVars.hasOwnProperty(key)) {
+      if (key in body.scopedVars) {
         let value = body.scopedVars[key].value;
 
 	if (!Array.isArray(value)) {
@@ -302,8 +302,6 @@ router
           vars.grafana = _.assign(vars.grafana, m);
         }
 
-        console.log("#####", vars);
-    
         if (targetDef.alias) {
            target = Mustache.render(targetDef.alias, vars);
         }
