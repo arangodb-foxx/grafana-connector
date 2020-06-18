@@ -17,64 +17,23 @@
       "required": false,
       "description": "Username incoming requests should use to authenticate for all queries."
     },
+
     "password": {
       "type": "password",
       "required": false,
       "description": "Password incoming requests should use to authenticate for all queries."
     },
 
-    "x1_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for x1."
-    },
-    "x2_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for x2. Either empty or as many values as x1."
-    },
-    "x3_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for x3. Either empty or as many values as x1."
-    },
-
-    "y1_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for y1."
-    },
-    "y2_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for y2. Either empty or as many values as y1."
-    },
-    "y3_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for y3. Either empty or as many values as y1."
-    },
-
-    "z1_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for z1."
-    },
-    "z2_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for z2. Either empty or as many values as z1."
-    },
-    "z3_variable": {
-      "type": "string",
-      "required": false,
-      "description": "Comma separated list of values for z3. Either empty or as many values as z1."
-    },
-
     "target": {
       "type": "string",
       "required": true,
-      "description": "Name of the target as shown in Grafana. Please note that the name can contain template variables."
+      "description": "Name of the target as shown in the Grafana Metric field. Please note that the name can contain template variables."
+    },
+
+    "alias": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the target as shown in the Grafana graph. Please note that the name can contain template variables."
     },
 
     "collection": {
@@ -93,47 +52,50 @@
     "filterExpression": {
       "type": "string",
       "required": false,
-      "description": "An AQL expression used to filter data. The current document is called 'doc'."
+      "description": "An AQL expression used to filter data. The current document is called 'doc'. You can use a Mustache like syntax to include variables. For example, doc.name == '{{grafana.name}}'."
     },
 
     "dateName": {
       "type": "string",
-      "description": "Name of the field containing the date time for each data point. Note that this cannot be a nested attribute. Use 'dateExpression' in this case. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression' takes precedence.",
+      "description": "Name of the field containing the date time for each data point. This is only used for Grafana to name the data-point.",
       "default": "date",
       "required": true,
       "description": "Name of the field using in Grafana."
     },
+
     "dateField": {
       "type": "string",
       "required": false,
-      "description": "Name of the field containing the date time for each data point. Either set 'dateField' or 'dateExpression'."
-    },
-    "dateExpression": {
-      "type": "string",
-      "required": false,
-      "description": "An AQL expression for the date time. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'."
-      "description": "An AQL expression for the data field. The current document is called 'doc'. Either set 'dateField' or 'dateExpression'. If both are specified than 'dateExpression' takes precedence.",
-      "required": false
+      "description": "Name of the field containing the date time for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'."
     },
 
     "valueName": {
       "type": "string",
-      "description": "Name of the field containing the numerical value for each data point. Note that this cannot be a nested attribute. Use 'valueExpression' in this case. Either set 'valueField' or 'valueExpression'. If both are specified than 'valueExpression' takes precedence.",
+      "description": "Name of the field containing the numerical value for each data point. This is only used for Grafana to the data-point.",
       "default": "value",
       "required": true,
       "description": "Name of the field using in Grafana."
     },
+
     "valueField": {
       "type": "string",
       "required": false,
-      "description": "Name of the field containing the numerical value for each data point. Either set 'valueField' or 'valueExpression'."
-      "description": "Name of the field containing the numerical value for each data point. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'. If both are specified than 'valueExpression' takes precedence.",
+      "description": "Name of the field containing the numerical value for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'.",
       "required": false
     },
-    "valueExpression": {
+
+    "multiValueTemplateVariables": {
       "type": "string",
       "required": false,
-      "description": "An AQL expression for a numerical value. The current document is called 'doc'. Either set 'valueField' or 'valueExpression'."
+	"description": "A comma-separated list of template variables that should be treated as multi-target variables. For example, if you have a Grafana variable 'size' which contains 'small' and 'big', then two runs will be done for the above expressions. The first one will set 'grafana.size' to 'small' and the second to 'big'.",
+      "required": false
+    },
+
+    "templateVariables": {
+      "type": "json",
+      "required": false,
+      "description": "A JSON object that describes the values for template variables. In Grafana create a Query named QUERY (in Query Options). For each such query, create a key QUERY and an AQL as value. For example, { \"size\": \"FOR doc IN sizes RETURN DISTINCT doc.name\" }.",
+      "required": false
     }
   }
 }

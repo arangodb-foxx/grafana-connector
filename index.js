@@ -7,6 +7,13 @@ const { context } = require("@arangodb/locals");
 const createRouter = require("@arangodb/foxx/router");
 const { getAuth } = require("./util");
 
+function* cartesian(args) {
+  let remainder = args.length > 1 ? cartesian(args.slice(1)) : [[]];
+  for (let r of remainder)
+    for (let h of args[0])
+      yield [h, ...r];
+}
+
 const AGGREGATIONS = [
   "AVERAGE",
   "COUNT",
@@ -31,28 +38,19 @@ const AGGREGATIONS_ALIASES = {
   "VARIANCE": "VARIANCE_POPULATION"
 };
 
+const ATTRIBUTE_NAME = RegExp("^[a-zA-Z][a-zA-Z0-9_]*$");
+
 /** @type {{
  *   username: string,
  *   password: string,
- *   x1_variable: string,
- *   x2_variable: string,
- *   x3_variable: string,
- *   y1_variable: string,
- *   y2_variable: string,
- *   y3_variable: string,
- *   z1_variable: string,
- *   z2_variable: string,
- *   z3_variable: string,
  *   target: string,
  *   collection: string,
  *   aggregation: string,
  *   filterExpression: string,
  *   dateName: string,
  *   dateField: string,
- *   dateExpression: string,
  *   valueName: string,
- *   valueField: string,
- *   valueExpression: string
+ *   valueField: string
  * }} */
 const cfg = context.configuration;
 const TARGETS = {};
@@ -67,13 +65,8 @@ const parse_variable = function(d) {
   return values;
 };
 
-const variables = [
-  _.map(["x1", "x2", "x3"], x => parse_variable(cfg[x + "_variable"])),
-  _.map(["y1", "y2", "y3"], x => parse_variable(cfg[x + "_variable"])),
-  _.map(["z1", "z2", "z3"], x => parse_variable(cfg[x + "_variable"]))
-];
-
 let agg = cfg['aggregation'];
+agg = agg ? agg.toUpperCase(agg) : null;
 
 if (AGGREGATIONS_ALIASES[agg]) {
   agg = AGGREGATIONS_ALIASES[agg];
@@ -87,56 +80,38 @@ const aggregations = (agg && agg !== '*')
   const target = cfg['target'];
   const collection = cfg['collection'];
 
-  const lengths = _.map(variables, x => _.max(_.map(x, y => y.length)));
-
   const view = {};
 
-  for (let x = 0; x < lengths[0]; ++x) {
-    view['x1'] = variables[0][0][x];
-    view['x2'] = variables[0][1][x];
-    view['x3'] = variables[0][2][x];
+  for (let a = 0; a < aggregations.length; ++a) {
+    const aggregation = aggregations[a];
+    view['aggregation'] = aggregation;
 
-    for (let y = 0; y < lengths[1]; ++y) {
-      view['y1'] = variables[1][0][y];
-      view['y2'] = variables[1][1][y];
-      view['y3'] = variables[1][2][y];
+    const t = Mustache.render(target, view);
 
-      for (let z = 0; z < lengths[2]; ++z) {
-        view['z1'] = variables[2][0][z];
-        view['z2'] = variables[2][1][z];
-        view['z3'] = variables[2][2][z];
+    let { filterExpression,
+          dateName, dateField,
+          valueName, valueField,
+          alias } = cfg;
 
-        for (let a = 0; a < aggregations.length; ++a) {
-          const aggregation = aggregations[a];
-          view['aggregation'] = aggregation;
+    const collectionName = Mustache.render(collection, view);
+    const c = db._collection(collectionName);
 
-          const t = Mustache.render(target, view);
-
-          let { filterExpression,
-                dateName, dateField, dateExpression,
-                valueName, valueField, valueExpression } = cfg;
-
-          const collectionName = Mustache.render(collection, view);
-          const c = db._collection(collectionName);
-
-          if (!c) {
-            throw new Error(
-              `Invalid service configuration. Unknown collection: ${collectionName}`
-            );
-          }
-
-          TARGETS[t] = {
-            target: t,
-            collection: c,
-            view: _.clone(view),
-            aggregation,
-            filterExpression,
-            dateField, dateName, dateExpression,
-            valueField, valueName, valueExpression
-          };
-        }
-      }
+    if (!c) {
+      throw new Error(
+        `Invalid service configuration. Unknown collection: ${collectionName}`
+      );
     }
+
+    TARGETS[t] = {
+      target: t,
+      alias,
+      collection: c,
+      view: _.clone(view),
+      aggregation,
+      filterExpression,
+      dateField, dateName,
+      valueField, valueName,
+    };
   }
 }
 
@@ -170,7 +145,24 @@ router
   );
 
 router
-  .post("/search", (_req, res) => {
+  .post("/search", (req, res) => {
+    const body = req.body;
+
+    if (body) {
+      const j = JSON.parse(body);
+
+      if (j.target) {
+        const target = j.target;
+        const tv = cfg['templateVariables'];
+
+        if (tv[target]) {
+          const values = db._query(tv[target]).toArray();
+          res.json(values);
+          return;
+        }
+      }
+    }
+    
     res.json(TARGET_KEYS);
   })
   .summary("List the available metrics")
@@ -178,37 +170,35 @@ router
     "This endpoint is used to determine which metrics (collections) are available to the data source."
   );
 
-const seriesQuery = function(definition, start, end, interval, data, isTable) {
-  const agg = aql.literal(definition.aggregation);
-  const { collection, view } = definition;
+const seriesQuery = function(definition, vars, start, end, interval, isTable) {
+  const agg = definition.aggregation && definition.aggregation !== "NONE"
+        ? aql.literal(definition.aggregation)
+        : null;
+  const { collection } = definition;
 
   let { filterExpression,
-        dateName, dateField, dateExpression,
-        valueName, valueField, valueExpression } = definition;
+        dateName, dateField,
+        valueName, valueField } = definition;
 
-  let v = _.assign({}, view, data);
+  filterExpression = filterExpression ? Mustache.render(filterExpression, vars) : undefined;
 
-  filterExpression = filterExpression ? Mustache.render(filterExpression, v) : undefined;
+  dateField = dateField ? Mustache.render(dateField, vars) : undefined;
+  definition.dateName = dateName ? Mustache.render(dateName, vars) : dateField;
 
-  dateField = dateField ? Mustache.render(dateField, v) : undefined;
-  definition.dateName = dateName ? Mustache.render(dateName, v) : dateField;
-  dateExpression = dateExpression ? Mustache.render(dateExpression, v) : undefined;
-
-  valueField = valueField ? Mustache.render(valueField, v) : undefined;
-  definition.valueName = valueName ? Mustache.render(valueName, v) : valueField;
-  valueExpression = valueExpression ? Mustache.render(valueExpression, v) : undefined;
+  valueField = valueField ? Mustache.render(valueField, vars) : undefined;
+  definition.valueName = valueName ? Mustache.render(valueName, vars) : valueField;
 
   let filterSnippet = aql.literal(filterExpression
     ? `FILTER ${filterExpression}`
     : "");
 
-  let dateSnippet = aql.literal(dateExpression
-    ? `LET d = ${dateExpression}`
-    : `LET d = doc["${dateField}"]`);
+  let dateSnippet = aql.literal(ATTRIBUTE_NAME.test(dateField)
+    ? `LET d = doc["${dateField}"]`
+    : `LET d = ${dateField}`);
 
-  let valueSnippet = aql.literal(valueExpression
-    ? `LET v = ${valueExpression}`
-    : `LET v = doc["${valueField}"]`);
+  let valueSnippet = aql.literal(ATTRIBUTE_NAME.test(valueField)
+    ? `LET v = doc["${valueField}"]`
+    : `LET v = ${valueField}`);
 
   if (isTable) {
     return query`
@@ -220,14 +210,27 @@ const seriesQuery = function(definition, start, end, interval, data, isTable) {
         SORT d
         RETURN [d, v]
     `.toArray();
+  } else if (agg) {
+    return query`
+      FOR doc IN ${collection}
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        COLLECT date = FLOOR(d / ${interval}) * ${interval}
+        AGGREGATE value = ${agg}(v)
+        SORT date
+        RETURN [value, date]
+    `.toArray();
   } else {
     return query`
       FOR doc IN ${collection}
-      LET d = ${dateExpression ? aql.literal(dateExpression) : aql`doc[${dateField}]`}
-      FILTER d >= ${start} AND d < ${end}
-      ${filterExpression ? aql`FILTER ${aql.literal(filterExpression)}` : aql``}
-      LET v = ${valueExpression ? aql.literal(valueExpression) : aql`doc[${valueField}]`}
-      RETURN [v, d]
+        ${dateSnippet}
+        FILTER d >= ${start} AND d < ${end}
+        ${filterSnippet}
+        ${valueSnippet}
+        SORT d
+        RETURN [v, d]
     `.toArray();
   }
 };
@@ -239,31 +242,93 @@ router
     const start = Number(new Date(body.range.from));
     const end = Number(new Date(body.range.to));
     const response = [];
+    const unravel = function() { return [].slice.call(arguments); };
 
-    for (let { target, type, data } of body.targets) {
-      let original = target;
+    const grafana = {};
+    const multiKeys = [];
+    let multiValues = [];
 
-      if (data.alias) {
-        target = data.alias;
+    if (cfg['multiValueTemplateVariables']) {
+      let d = cfg['multiValueTemplateVariables'];
+      multiValues = _.map(_.split(d, ","), str => str.trim());
+    }
+
+    for (let key of multiKeys) {
+      if (body.scopedVars.hasOwnProperty(key)) {
+        let value = body.scopedVars[key].value;
+
+	if (!Array.isArray(value)) {
+	   value = [value];
+	}
+
+	let l = [];
+
+	for (let v of value) {
+  	  let obj = {};
+          obj[key] = v;
+	  l.push(obj);
+	}
+
+	multiValues.push(l);
       }
+    }
 
-      const definition = _.merge({}, TARGETS[target]);
-      const isTable = (type === "table");
-      const datapoints = definition ? seriesQuery(definition, start, end, interval, data, isTable) : [];
+    if (multiValues.length > 0) {
+      multiValues = unravel(...cartesian(multiValues));
+    } else {
+      multiValues = [[{}]];
+    }
 
-      if (isTable) {
-        response.push({
-          target: original,
-          type: "table",
-          columns: [{ text: definition.dateName }, { text: definition.valueName }],
-          rows: datapoints
-        });
-      } else {
-        response.push({
-          target: original,
-          type: "timeserie",
-          datapoints
-        });
+    for (let key of Object.keys(body.scopedVars)) {
+      if (key[0] !== '_' && !multiValues.includes(key)) {
+        const val = body.scopedVars[key];
+        grafana[key] = val.value;
+      }
+    }
+          
+    for (let mv of multiValues) {
+      for (let { target, type, data } of body.targets) {
+        let original = target;
+        const targetDef = TARGETS[original];
+
+        if (!targetDef) {
+          throw Error(`unknown target ${original}`);
+        }
+
+        const definition = _.merge({}, targetDef);
+        const vars = _.assign({grafana}, definition.view, data);
+
+        for (let m of mv) {
+          vars.grafana = _.assign(vars.grafana, m);
+        }
+
+        console.log("#####", vars);
+    
+        if (targetDef.alias) {
+           target = Mustache.render(targetDef.alias, vars);
+        }
+
+        if (data && data.alias) {
+          target = data.alias;
+        }
+
+        const isTable = (type === "table");
+        const datapoints = definition ? seriesQuery(definition, vars, start, end, interval, isTable) : [];
+
+        if (isTable) {
+          response.push({
+            target: target,
+            type: "table",
+            columns: [{ text: definition.dateName }, { text: definition.valueName }],
+            rows: datapoints
+          });
+        } else {
+          response.push({
+            target: target,
+            type: "timeserie",
+            datapoints
+          });
+        }
       }
     }
 
