@@ -80,22 +80,26 @@
     "valueField": {
       "type": "string",
       "required": false,
-      "description": "Name of the field containing the numerical value for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'.",
-      "required": false
+      "description": "Name of the field containing the numerical value for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'."
+    },
+
+    "hideEmpty": {
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Do not show empty results."
     },
 
     "multiValueTemplateVariables": {
       "type": "string",
       "required": false,
-	"description": "A comma-separated list of template variables that should be treated as multi-target variables. For example, if you have a Grafana variable 'size' which contains 'small' and 'big', then two runs will be done for the above expressions. The first one will set 'grafana.size' to 'small' and the second to 'big'.",
-      "required": false
+	"description": "A comma-separated list of template variables that should be treated as multi-target variables. For example, if you have a Grafana variable 'size' which contains 'small' and 'big', then two runs will be done for the above expressions. The first one will set 'grafana.size' to 'small' and the second to 'big'."
     },
 
     "templateVariables": {
       "type": "json",
       "required": false,
-      "description": "A JSON object that describes the values for template variables. In Grafana create a Query named QUERY (in Query Options). For each such query, create a key QUERY and an AQL as value. For example, { \"size\": \"FOR doc IN sizes RETURN DISTINCT doc.name\" }.",
-      "required": false
+      "description": "A JSON object that describes the values for template variables. In Grafana create a Query named QUERY (in Query Options). For each such query, create a key QUERY and an AQL as value. For example, { \"size\": \"FOR doc IN sizes RETURN DISTINCT doc.name\" }."
     }
   }
 }

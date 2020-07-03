@@ -65,6 +65,8 @@ const parse_variable = function(d) {
   return values;
 };
 
+const hideEmpty = cfg['hideEmpty']
+
 let agg = cfg['aggregation'];
 agg = agg ? agg.toUpperCase(agg) : null;
 
@@ -141,7 +143,8 @@ router
   })
   .summary("SimpleJSON self-test endpoint")
   .description(
-    "This is a dummy endpoint used by the SimpleJSON data source to confirm that the data source is configured correctly."
+    "This is a dummy endpoint used by the SimpleJSON data source to " +
+    "confirm that the data source is configured correctly."
   );
 
 router
@@ -167,7 +170,8 @@ router
   })
   .summary("List the available metrics")
   .description(
-    "This endpoint is used to determine which metrics (collections) are available to the data source."
+    "This endpoint is used to determine which metrics (collections) " +
+    "are available to the data source."
   );
 
 const seriesQuery = function(definition, vars, start, end, interval, isTable) {
@@ -311,21 +315,25 @@ router
         }
 
         const isTable = (type === "table");
-        const datapoints = definition ? seriesQuery(definition, vars, start, end, interval, isTable) : [];
+        const datapoints = definition ?
+              seriesQuery(definition, vars, start, end, interval, isTable) :
+              [];
 
-        if (isTable) {
-          response.push({
-            target: target,
-            type: "table",
-            columns: [{ text: definition.dateName }, { text: definition.valueName }],
-            rows: datapoints
-          });
-        } else {
-          response.push({
-            target: target,
-            type: "timeserie",
-            datapoints
-          });
+        if (datapoints.length > 0 || !hideEmpty) {
+          if (isTable) {
+            response.push({
+              target: target,
+              type: "table",
+              columns: [{ text: definition.dateName }, { text: definition.valueName }],
+              rows: datapoints
+            });
+          } else {
+            response.push({
+              target: target,
+              type: "timeserie",
+              datapoints
+            });
+          }
         }
       }
     }
