@@ -311,7 +311,7 @@ router
         }
 
         if (data && data.alias) {
-          target = data.alias;
+          target = Mustache.render(data.alias, vars);
         }
 
         const isTable = (type === "table");
