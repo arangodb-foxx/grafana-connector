@@ -66,6 +66,7 @@ const parse_variable = function(d) {
 };
 
 const hideEmpty = cfg['hideEmpty']
+const logQuery = cfg['logQuery']
 
 let agg = cfg['aggregation'];
 agg = agg ? agg.toUpperCase(agg) : null;
@@ -204,8 +205,10 @@ const seriesQuery = function(definition, vars, start, end, interval, isTable) {
     ? `LET v = doc["${valueField}"]`
     : `LET v = ${valueField}`);
 
+  let q;
+
   if (isTable) {
-    return query`
+    q = aql`
       FOR doc IN ${collection}
         ${dateSnippet}
         FILTER d >= ${start} AND d < ${end}
@@ -213,9 +216,9 @@ const seriesQuery = function(definition, vars, start, end, interval, isTable) {
         ${valueSnippet}
         SORT d
         RETURN [d, v]
-    `.toArray();
+    `;
   } else if (agg) {
-    return query`
+    q = aql`
       FOR doc IN ${collection}
         ${dateSnippet}
         FILTER d >= ${start} AND d < ${end}
@@ -225,9 +228,9 @@ const seriesQuery = function(definition, vars, start, end, interval, isTable) {
         AGGREGATE value = ${agg}(v)
         SORT date
         RETURN [value, date]
-    `.toArray();
+    `;
   } else {
-    return query`
+    q = aql`
       FOR doc IN ${collection}
         ${dateSnippet}
         FILTER d >= ${start} AND d < ${end}
@@ -235,8 +238,14 @@ const seriesQuery = function(definition, vars, start, end, interval, isTable) {
         ${valueSnippet}
         SORT d
         RETURN [v, d]
-    `.toArray();
+    `;
   }
+
+  if (logQuery) {
+    console.log("query: " + q.query);
+  }
+
+  return db._query(q).toArray();
 };
 
 router
