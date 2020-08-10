@@ -90,6 +90,13 @@
       "description": "Do not show empty results."
     },
 
+    "logQuery": {
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Log queries and some more information in the console log."
+    },
+
     "multiValueTemplateVariables": {
       "type": "string",
       "required": false,
