@@ -316,7 +316,9 @@ router
       }
     }
           
-    for (let mv of multiValues) {
+    for (let mvRaw of multiValues) {
+      const mv = htmlDecode(mvRaw);
+
       for (let { target, type, data } of body.targets) {
         let original = target;
         const targetDef = TARGETS[original];
