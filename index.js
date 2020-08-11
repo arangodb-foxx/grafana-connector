@@ -14,6 +14,23 @@ function* cartesian(args) {
       yield [h, ...r];
 }
 
+const htmlDecode = function(str) {
+  const map = {
+    '&amp;' :   '&',
+    '&gt;'  :   '>',
+    '&lt;'  :   '<',
+    '&quot;':   '"',
+    '&#39;' :   "'"
+  };
+  const re = new RegExp('(' + Object.keys(map).join('|') + '|&#[0-9]{1,5};|&#x[0-9a-fA-F]{1,4};' + ')', 'g');
+  return String(str).replace(re, function(match, capture) {
+    return (capture in map) ? map[capture] :
+      capture[2] === 'x' ?
+        String.fromCharCode(parseInt(capture.substr(3), 16)) :
+        String.fromCharCode(parseInt(capture.substr(2), 10));
+  });
+};
+
 const AGGREGATIONS = [
   "AVERAGE",
   "COUNT",
@@ -295,7 +312,7 @@ router
     for (let key of Object.keys(body.scopedVars)) {
       if (key[0] !== '_' && !multiValues.includes(key)) {
         const val = body.scopedVars[key];
-        grafana[key] = val.value;
+        grafana[key] = htmlDecode(val.value);
       }
     }
           
