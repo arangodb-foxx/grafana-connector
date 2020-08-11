@@ -14,23 +14,6 @@ function* cartesian(args) {
       yield [h, ...r];
 }
 
-const htmlDecode = function(str) {
-  const map = {
-    '&amp;' :   '&',
-    '&gt;'  :   '>',
-    '&lt;'  :   '<',
-    '&quot;':   '"',
-    '&#39;' :   "'"
-  };
-  const re = new RegExp('(' + Object.keys(map).join('|') + '|&#[0-9]{1,5};|&#x[0-9a-fA-F]{1,4};' + ')', 'g');
-  return String(str).replace(re, function(match, capture) {
-    return (capture in map) ? map[capture] :
-      capture[2] === 'x' ?
-        String.fromCharCode(parseInt(capture.substr(3), 16)) :
-        String.fromCharCode(parseInt(capture.substr(2), 10));
-  });
-};
-
 const AGGREGATIONS = [
   "AVERAGE",
   "COUNT",
@@ -312,13 +295,15 @@ router
     for (let key of Object.keys(body.scopedVars)) {
       if (key[0] !== '_' && !multiValues.includes(key)) {
         const val = body.scopedVars[key];
-        grafana[key] = htmlDecode(val.value);
+        grafana[key] = val.value;
+
+        if (logQuery) {
+          console.log("using grafana var '" + key + "': '" + grafana[key] + "'");
+        }
       }
     }
           
-    for (let mvRaw of multiValues) {
-      const mv = htmlDecode(mvRaw);
-
+    for (let mv of multiValues) {
       for (let { target, type, data } of body.targets) {
         let original = target;
         const targetDef = TARGETS[original];
@@ -331,6 +316,10 @@ router
         const vars = _.assign({grafana}, definition.view, data);
 
         for (let m of mv) {
+          if (logQuery) {
+            console.log("using multi-value vars '" + JSON.stringify(m) + "'");
+          }
+
           vars.grafana = _.assign(vars.grafana, m);
         }
 
