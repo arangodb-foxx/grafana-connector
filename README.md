@@ -1,23 +1,20 @@
 # Grafana Simple JSON connector for ArangoDB
 
-This is an example Grafana connector for ArangoDB that can be used with the
+This is the Grafana connector for ArangoDB that can be used as data source 
+for the Grafana plugin
 [JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/).
-
-![JSON configuration dialog](./images/simplejson.png)
+Note that this plugin requires Grafana 8.
 
 ## Preparation
 
-First install the JSON Data Source plugin using the `grafana-cli` following the
-instruction
-[above](https://grafana.com/grafana/plugins/simpod-json-datasource/).
-
+First install the JSON Data Source plugin in Grafana following the
+[instructions](https://grafana.com/grafana/plugins/simpod-json-datasource/).
 You may have to restart Grafana for the new data source to become available.
 
 ## Installation
 
 The Grafana connector can be installed as a Foxx service using the
-[ArangoDB web interface](https://docs.arangodb.com/latest/Manual/Programs/WebInterface/Services.html)
-or the [Foxx CLI](https://github.com/arangodb/foxx-cli):
+[Foxx CLI](https://github.com/arangodb/foxx-cli):
 
 ```sh
 $ npm install --global foxx-cli
@@ -25,7 +22,8 @@ $ foxx install -u root -P -H http://COORDINATOR:8529 -D _system /grafana \
 https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ```
 
-or without installing foxx-cli:
+or the
+[ArangoDB web interface](https://docs.arangodb.com/latest/Manual/Programs/WebInterface/Services.html):
 
 ```sh
 $ npx foxx-cli install -u root -P -H http://localhost:8529 -D _system /grafana \
@@ -42,7 +40,11 @@ to be configured.
 * a username / password to access the service in ArangoDB
 * the same username / password must be used when configuring the JSON data source
 
+### ArangoDB Configuration
 
+### Grafana Configuration
+
+![JSON configuration dialog](./images/simplejson.png)
 
 To configure the service in the ArangoDB web interface, open the service details
 and then navigate to the _Settings_ tab in the top bar.
