@@ -1,8 +1,8 @@
 {
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana-connector",
-  "description": "Example Grafana Simple JSON connector for ArangoDB.",
-  "version": "2.0.0",
+  "description": "Grafana JSON connector for ArangoDB.",
+  "version": "3.0.0",
   "thumbnail": "images/grafana.png",
   "engines": {
     "arangodb": "^3.0.0"
@@ -18,62 +18,38 @@
     "username": {
       "type": "string",
       "required": false,
-      "description": "Username incoming requests should use to authenticate for all queries."
+      "description": "Username incoming requests should use to authenticate for all queries. If ArangoDB system authentication has been enabled for this service the username can be empty."
     },
     "password": {
       "type": "password",
       "required": false,
-      "description": "Password incoming requests should use to authenticate for all queries."
+      "description": "Password incoming requests should use to authenticate for all queries. If ArangoDB system authentication has been enabled for this service the username can be empty."
     },
     "target": {
       "type": "string",
       "required": true,
-      "description": "Name of the target as shown in the Grafana Metric field. Please note that the name can contain template variables."
+      "description": "Name of the target(s) which are shown in the Grafana Metric field. Please note that the name can contain template variables. This can result in multiple targets."
     },
     "alias": {
       "type": "string",
       "required": false,
-      "description": "Name of the target as shown in the Grafana graph. Please note that the name can contain template variables."
-    },
-    "collection": {
-      "type": "string",
-      "required": true,
-      "description": "Name of the collection. Please note that the name can contain template variables."
+      "description": "Name of the target(s) as shown in the Grafana graph. Please note that the name can contain template variables. This can be used to create more human readable fields."
     },
     "aggregation": {
       "type": "string",
-      "description": "Aggregation function. Should be one of AVG, COUNT, COUNT_DISTINCT, MAX, MIN, SORTED_UNIQUE, STDDEV, STDDEV_SAMPLE, SUM, UNIQUE, VARIANCE, VARIANCE_SAMPLE, NONE. You can use '*' to get them all defined except 'NONE'.",
+      "description": "Aggregation functions to use. Should be a comma separated list of AVG, COUNT, COUNT_DISTINCT, MAX, MIN, SORTED_UNIQUE, STDDEV, STDDEV_SAMPLE, SUM, UNIQUE, VARIANCE, VARIANCE_SAMPLE, NONE. You can use '*' to get them all defined except 'NONE'.",
       "default": "SUM",
       "required": false
     },
-    "filterExpression": {
+    "multiValueTemplateVariables": {
       "type": "string",
       "required": false,
-      "description": "An AQL expression used to filter data. The current document is called 'doc'. You can use a Mustache like syntax to include variables. For example, doc.name == '{{grafana.name}}'."
+      "description": "A comma-separated list of template variables that should be treated as multi-target variables. For example, if you have a Grafana variable 'size' which contains 'small' and 'big', then two runs will be done for the above expressions. The first one will set 'grafana.size' to 'small' and the second to 'big'."
     },
-    "dateName": {
+    "query": {
       "type": "string",
-      "description": "Name of the field containing the date time for each data point. This is only used for Grafana to name the data-point.",
-      "default": "date",
       "required": true,
-      "description": "Name of the field using in Grafana."
-    },
-    "dateField": {
-      "type": "string",
-      "required": false,
-      "description": "Name of the field containing the date time for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'. The value of this field should be expressed in milliseconds since the start of the UNIX epoch."
-    },
-    "valueName": {
-      "type": "string",
-      "description": "Name of the field containing the numerical value for each data point. This is only used for Grafana to the data-point.",
-      "default": "value",
-      "required": true,
-      "description": "Name of the field using in Grafana."
-    },
-    "valueField": {
-      "type": "string",
-      "required": false,
-      "description": "Name of the field containing the numerical value for each data point. Either a top-level attribute name or an AQL expression. In the latter case, The current document is called 'doc'."
+      "description": "The AQL query to get the time-series. The query must not contain a RETURN statement. Instead a variable 'doc' must be defined with two attributes 'time' and 'value'. The query will be augmented with the aggreation defined."
     },
     "hideEmpty": {
       "type": "bool",
@@ -85,12 +61,7 @@
       "type": "bool",
       "default": false,
       "required": false,
-      "description": "Log queries and some more information in the console log."
-    },
-    "multiValueTemplateVariables": {
-      "type": "string",
-      "required": false,
-      "description": "A comma-separated list of template variables that should be treated as multi-target variables. For example, if you have a Grafana variable 'size' which contains 'small' and 'big', then two runs will be done for the above expressions. The first one will set 'grafana.size' to 'small' and the second to 'big'."
+      "description": "Log queries and some more information in the console log and the response."
     },
     "templateVariables": {
       "type": "json",
