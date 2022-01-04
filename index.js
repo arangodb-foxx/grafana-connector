@@ -268,6 +268,7 @@ const seriesQuery = function(definition, vars, start, end, interval, isTable) {
 
 router
     .post('/query', (req, res) => {
+	console.log(JSON.stringify(req));
         const body = req.body;
         const interval = body.intervalMs;
         const start = Number(new Date(body.range.from));
@@ -366,7 +367,8 @@ router
                         response.push({
                             target: target,
                             type: 'timeserie',
-                            datapoints
+                            datapoints,
+                            debug: { aql: "for x in doc" }
                         });
                     }
                 }
@@ -392,7 +394,7 @@ router
                         joi
                             .object({
                                 target: joi.allow(...TARGET_KEYS).required(),
-                                type: joi.allow('timeserie', 'table').required()
+                                type: joi.allow('timeserie', 'table').optional()
                             })
                             .required()
                     )

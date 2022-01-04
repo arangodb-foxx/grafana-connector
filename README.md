@@ -1,17 +1,15 @@
 # Grafana Simple JSON connector for ArangoDB
 
 This is an example Grafana connector for ArangoDB that can be used with the
-[Simple JSON Data Source plugin](https://grafana.com/plugins/grafana-simple-json-datasource/installation).
+[JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/).
 
-![SimpleJSON configuration dialog](./images/simplejson.png)
+![JSON configuration dialog](./images/simplejson.png)
 
 ## Preparation
 
-First install the Simple JSON Data Source plugin using the `grafana-cli`:
-
-```sh
-$ grafana-cli plugins install grafana-simple-json-datasource
-```
+First install the JSON Data Source plugin using the `grafana-cli` following the
+instruction
+[above](https://grafana.com/grafana/plugins/simpod-json-datasource/).
 
 You may have to restart Grafana for the new data source to become available.
 
@@ -23,11 +21,13 @@ or the [Foxx CLI](https://github.com/arangodb/foxx-cli):
 
 ```sh
 $ npm install --global foxx-cli
-$ foxx install -u root -P -H http://localhost:8529 -D _system /grafana \
+$ foxx install -u root -P -H http://COORDINATOR:8529 -D _system /grafana \
 https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
+```
 
-# or without installing foxx-cli:
+or without installing foxx-cli:
 
+```sh
 $ npx foxx-cli install -u root -P -H http://localhost:8529 -D _system /grafana \
 https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ```
@@ -35,7 +35,14 @@ https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ## Configuration
 
 Before you can use the ArangoDB connector in Grafana you need to configure the
-service using the web interface or the Foxx CLI.
+service using the web interface or the Foxx CLI. There are three parts that need
+to be configured.
+
+* the AQL query to extract the timeseries
+* a username / password to access the service in ArangoDB
+* the same username / password must be used when configuring the JSON data source
+
+
 
 To configure the service in the ArangoDB web interface, open the service details
 and then navigate to the _Settings_ tab in the top bar.
