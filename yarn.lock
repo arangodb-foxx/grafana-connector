@@ -38,19 +38,12 @@
   dependencies:
     "@types/node" "*"
 
-"@types/joi@^17.2.3":
-  version "17.2.3"
-  resolved "https://registry.yarnpkg.com/@types/joi/-/joi-17.2.3.tgz#b7768ed9d84f1ebd393328b9f97c1cf3d2b94798"
-  integrity sha512-dGjs/lhrWOa+eO0HwgxCSnDm5eMGCsXuvLglMghJq32F6q5LyyNuXb41DHzrg501CKNOSSAHmfB7FDGeUnDmzw==
-  dependencies:
-    joi "*"
-
 "@types/node@*":
   version "11.12.2"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-11.12.2.tgz#d7f302e74b10e9801d52852137f652d9ee235da8"
   integrity sha512-c82MtnqWB/CqqK7/zit74Ob8H1dBdV7bK+BcErwtXbe0+nUGkgzq5NTDmRW/pAv2lFtmeNmW95b0zK2hxpeklg==
 
-joi@*:
+joi@^17.5.0:
   version "17.5.0"
   resolved "https://registry.yarnpkg.com/joi/-/joi-17.5.0.tgz#7e66d0004b5045d971cf416a55fb61d33ac6e011"
   integrity sha512-R7hR50COp7StzLnDi4ywOXHrBrgNXuUUfJWIR5lPY5Bm/pOD3jZaTwpluUXVLRWcoWZxkrHBBJ5hLxgnlehbdw==
@@ -60,6 +53,11 @@ joi@*:
     "@sideway/address" "^4.1.3"
     "@sideway/formula" "^3.0.0"
     "@sideway/pinpoint" "^2.0.0"
+
+lodash@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 mustache@^4.2.0:
   version "4.2.0"
