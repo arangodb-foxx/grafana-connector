@@ -108,7 +108,7 @@ router
         }
     })
     .body(joi.object({
-        target: joi.string().optional()
+        target: joi.string().allow(null, '').optional()
     }).options({allowUnknown: true}))
     .summary('List the available metrics')
     .description(
