@@ -3,8 +3,6 @@
 This is an example Grafana connector for ArangoDB that can be used with the
 [Simple JSON Data Source plugin](https://grafana.com/plugins/grafana-simple-json-datasource).
 
-![SimpleJSON configuration dialog](./images/simplejson.png)
-
 ## Preparation
 
 First install the Simple JSON Data Source plugin using the `grafana-cli`:
