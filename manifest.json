@@ -55,7 +55,7 @@
       "type": "bool",
       "default": false,
       "required": false,
-      "description": "Do not show empty results."
+      "description": "Do not show empty results. This entry will be ignore if logQuery is true."
     },
     "logQuery": {
       "type": "bool",

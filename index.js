@@ -31,17 +31,48 @@ context.use(router);
 if (USERNAME) {
     const PASSWORD = cfg['password'];
 
+    const getAuth = function getAuth(req) {
+        const header = req.get("authorization") || "";
+        let match = header.match(/^Bearer (.*)$/);
+        if (match) {
+            return {bearer: match[1]};
+        }
+        match = header.match(/^Basic (.*)$/);
+        if (match) {
+            let credentials = "";
+            try {
+                credentials = new Buffer(match[1], "base64").toString("utf-8");
+            } catch (e) {/*ignore*/
+            }
+            if (!credentials) return {basic: {}};
+            const i = credentials.indexOf(":");
+            if (i === -1) {
+                return {basic: {username: credentials}};
+            }
+            return {
+                basic: {
+                    username: credentials.slice(0, i),
+                    password: credentials.slice(i + 1)
+                }
+            };
+        }
+    };
+
     router.use((req, res, next) => {
-        const auth = req.auth;
-        console.log(auth);
+        // TODO the following always return "null"
+        // const auth = req.auth;
+        const auth = getAuth(req);
+
         if (!auth || !auth.basic) {
             res.throw(401, 'Authentication required');
+        } else {
+            const {username, password} = auth.basic;
+            if (username !== USERNAME || (PASSWORD && password !== PASSWORD)) {
+                res.throw(403, 'Bad username or password');
+            } else {
+                next();
+            }
         }
-        const {username, password} = auth.basic;
-        if (username !== USERNAME || (PASSWORD && password !== PASSWORD)) {
-            res.throw(403, 'Bad username or password');
-        }
-        next();
     });
 }
 
@@ -76,7 +107,9 @@ router
             res.json(TARGET_KEYS);
         }
     })
-    .body(joi.object())
+    .body(joi.object({
+        target: joi.string().optional()
+    }).options({allowUnknown: true}))
     .summary('List the available metrics')
     .description(
         'This endpoint is used to determine which metrics (collections) ' +
@@ -88,6 +121,10 @@ router
     .post('/query', (req, res) => {
         console.log(JSON.stringify(req));
         const body = req.body;
+
+        if (cfg.logQuery) {
+            console.log(`search input: ${JSON.stringify(body)}`);
+        }
 
         const response = queries.results(cfg, {
             interval: body.intervalMs,
