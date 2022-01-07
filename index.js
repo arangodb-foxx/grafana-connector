@@ -36,12 +36,6 @@ if (USERNAME) {
         const noAuth = !auth || !auth.basic;
 
         if (noAuth) {
-            console.log("***** auth.username: " + auth.basic.username);
-        }
-
-        console.log("***** request: " + JSON.stringify(req));
-
-        if (noAuth) {
             res.throw(401, 'Authentication required');
         } else {
             const {username, password} = auth.basic;
