@@ -1,11 +1,10 @@
 'use strict';
 
-import joi from "joi";
-
-import {context} from "@arangodb/locals";
-import {targets} from "./lib/aggregations";
-
+const joi = require("joi");
 const createRouter = require('@arangodb/foxx/router');
+
+const {context} = require("@arangodb/locals");
+const {targets} = require("./lib/aggregations");
 const queries = require("./lib/queries");
 
 /** @type {{
@@ -24,7 +23,7 @@ const queries = require("./lib/queries");
 const cfg = context.configuration;
 
 const USERNAME = cfg['username'];
-const TARGET_KEYS = targets(cfg);
+const {TARGET_KEYS} = targets(cfg);
 
 const router = createRouter();
 context.use(router);
@@ -34,6 +33,7 @@ if (USERNAME) {
 
     router.use((req, res, next) => {
         const auth = req.auth;
+	console.log(auth);
         if (!auth || !auth.basic) {
             res.throw(401, 'Authentication required');
         }
@@ -57,11 +57,26 @@ router
 
 router
     .post('/search', (req, res) => {
-        const body = req.body;
-        const results = queries.search(cfg, body);
+	const body = req.body;
 
-        res.json(results);
+	if (body && body.target) {
+	    const target = body.target;
+	    const results = queries.search(cfg, target);
+
+            if (body.logQuery) {
+		console.log(`target ${target}: ${JSON.stringify(results)}`);
+	    }
+
+	    res.json(target);
+	} else {
+            if (body.logQuery) {
+		console.log(`target: ${JSON.stringify(TARGET_KEYS)}`);
+	    }
+
+	    res.json(TARGET_KEYS);
+	}
     })
+    .body(joi.object())
     .summary('List the available metrics')
     .description(
         'This endpoint is used to determine which metrics (collections) ' +
@@ -76,6 +91,7 @@ router
 
         const response = queries.results(cfg, {
             interval: body.intervalMs,
+	    scopedVars: body.scopedVars,
             start: Number(new Date(body.range.from)),
             end: Number(new Date(body.range.to))
         });

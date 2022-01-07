@@ -5,7 +5,7 @@
   "version": "3.0.0",
   "thumbnail": "images/grafana.png",
   "engines": {
-    "arangodb": "^3.0.0"
+    "arangodb": "^3.8.0"
   },
   "author": "ArangoDB GmbH",
   "contributors": [
