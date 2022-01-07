@@ -33,7 +33,7 @@ if (USERNAME) {
 
     router.use((req, res, next) => {
         const auth = req.auth;
-	console.log(auth);
+        console.log(auth);
         if (!auth || !auth.basic) {
             res.throw(401, 'Authentication required');
         }
@@ -57,24 +57,24 @@ router
 
 router
     .post('/search', (req, res) => {
-	const body = req.body;
+        const body = req.body;
 
-	if (body && body.target) {
-	    const target = body.target;
-	    const results = queries.search(cfg, target);
+        if (body && body.target) {
+            const target = body.target;
+            const results = queries.search(cfg, target);
 
             if (cfg.logQuery) {
-		console.log(`target ${target}: ${JSON.stringify(results)}`);
-	    }
+                console.log(`target ${target}: ${JSON.stringify(results)}`);
+            }
 
-	    res.json(results);
-	} else {
+            res.json(results);
+        } else {
             if (cfg.logQuery) {
-		console.log(`target: ${JSON.stringify(TARGET_KEYS)}`);
-	    }
+                console.log(`target: ${JSON.stringify(TARGET_KEYS)}`);
+            }
 
-	    res.json(TARGET_KEYS);
-	}
+            res.json(TARGET_KEYS);
+        }
     })
     .body(joi.object())
     .summary('List the available metrics')
@@ -91,7 +91,7 @@ router
 
         const response = queries.results(cfg, {
             interval: body.intervalMs,
-	    scopedVars: body.scopedVars,
+            scopedVars: body.scopedVars,
             start: Number(new Date(body.range.from)),
             end: Number(new Date(body.range.to))
         });
