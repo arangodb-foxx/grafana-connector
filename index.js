@@ -63,13 +63,13 @@ router
 	    const target = body.target;
 	    const results = queries.search(cfg, target);
 
-            if (body.logQuery) {
+            if (cfg.logQuery) {
 		console.log(`target ${target}: ${JSON.stringify(results)}`);
 	    }
 
-	    res.json(target);
+	    res.json(results);
 	} else {
-            if (body.logQuery) {
+            if (cfg.logQuery) {
 		console.log(`target: ${JSON.stringify(TARGET_KEYS)}`);
 	    }
 
