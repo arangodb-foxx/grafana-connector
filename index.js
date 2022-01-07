@@ -31,37 +31,8 @@ context.use(router);
 if (USERNAME) {
     const PASSWORD = cfg['password'];
 
-    const getAuth = function getAuth(req) {
-        const header = req.get("authorization") || "";
-        let match = header.match(/^Bearer (.*)$/);
-        if (match) {
-            return {bearer: match[1]};
-        }
-        match = header.match(/^Basic (.*)$/);
-        if (match) {
-            let credentials = "";
-            try {
-                credentials = new Buffer(match[1], "base64").toString("utf-8");
-            } catch (e) {/*ignore*/
-            }
-            if (!credentials) return {basic: {}};
-            const i = credentials.indexOf(":");
-            if (i === -1) {
-                return {basic: {username: credentials}};
-            }
-            return {
-                basic: {
-                    username: credentials.slice(0, i),
-                    password: credentials.slice(i + 1)
-                }
-            };
-        }
-    };
-
     router.use((req, res, next) => {
-        // TODO the following always return "null"
-        // const auth = req.auth;
-        const auth = getAuth(req);
+        const auth = req.auth;
 
         if (!auth || !auth.basic) {
             res.throw(401, 'Authentication required');
