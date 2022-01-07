@@ -2,8 +2,6 @@
   "private": true,
   "dependencies": {
     "@types/arangodb": "^3.5.13",
-    "joi": "^17.5.0",
-    "joi-to-json": "^2.1.1",
     "lodash": "^4.17.21",
     "mustache": "^4.2.0"
   }
