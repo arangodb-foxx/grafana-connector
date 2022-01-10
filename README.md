@@ -2,16 +2,15 @@
 
 STILL IN PROGRESS
 
-This is the Grafana connector for ArangoDB that can be used as data source 
-for the Grafana plugin
-[JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/).
-Note that this plugin requires Grafana 8.
+This is the Grafana connector for ArangoDB that can be used as data source for the Grafana plugin
+[JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/). Note that this plugin requires Grafana
+8.
 
 ## Preparation
 
 First install the JSON Data Source plugin in Grafana following the
-[instructions](https://grafana.com/grafana/plugins/simpod-json-datasource/).
-You may have to restart Grafana for the new data source to become available.
+[instructions](https://grafana.com/grafana/plugins/simpod-json-datasource/). You may have to restart Grafana for the new
+data source to become available.
 
 ## Installation
 
@@ -34,45 +33,38 @@ https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 
 ## Simple Configuration
 
-Before you can use the ArangoDB connector in Grafana you need to configure the
-service using the web interface or the Foxx CLI. There are the following parts
-that need to be configured.
+Before you can use the ArangoDB connector in Grafana you need to configure the service using the web interface or the
+Foxx CLI. There are the following parts that need to be configured.
 
 * ArangoDB grafana-connector
     * a username / password to access the service in ArangoDB
     * the AQL query to extract the timeseries
     * the targets shown in Grafana
 * Grafana JSON Data Source
-    * the same username / password as above to access ArangoDB.
-      This is a global configuration.
+    * the same username / password as above to access ArangoDB. This is a global configuration.
     * per dashboard variables. This step is optional.
 
-The following steps describe a simple configuration without any special targets
-and/or dashboard variables.
+The following steps describe a simple configuration without any special targets and/or dashboard variables.
 
 ### ArangoDB Configuration
 
-You should have installed the Foxx service as described above. The _Settings_ tab
-will show the configuration page.
+You should have installed the Foxx service as described above. The _Settings_ tab will show the configuration page.
 
 ![Grafana Connector configuration dialog](./images/config.png)
 
-There are two possible configurations for authorization depending on the value
-of `server.authentication-system-only`. If `true` then Foxx apps are not
-authenticated and need to provide their own authentication. In that case
-you should define
+There are two possible configurations for authorization depending on the value of `server.authentication-system-only`.
+If `true` then Foxx apps are not authenticated and need to provide their own authentication. In that case you should
+define
 
 * username
 * password
 
-If `false` then Foxx apps are using the normal authentication, and you should
-create a read-only user with access to the database.
+If `false` then Foxx apps are using the normal authentication, and you should create a read-only user with access to the
+database.
 
-In either case you will need the username and password later when configuring the
-JSON data source in Grafana.
+In either case you will need the username and password later when configuring the JSON data source in Grafana.
 
-`target` can be any name. It will be shown in Grafana under the Metric selector
-when defining a query.
+`target` can be any name. It will be shown in Grafana under the Metric selector when defining a query.
 
 ![Grafana Metric](./images/metric-grafana.png)
 
@@ -96,17 +88,15 @@ Assuming that the database is called `rlog` and the mounted the Foxx service at
 ### Grafana Configuration
 
 To add the connector as a data source in Grafana, navigate to
-_Configuration > Date Sources_ and press the _Add data source_ button,
-then select the _Json_ data source.
+_Configuration > Date Sources_ and press the _Add data source_ button, then select the _Json_ data source.
 
 ![JSON configuration dialog](./images/simplejson.png)
 
-Enter the URL of the service, e.g. `http://localhost:8529/_db/rlog/rlog2`,
-and tick the checkbox for _Basic Auth_, then enter the credentials you defined
-while configuring the service.
+Enter the URL of the service, e.g. `http://localhost:8529/_db/rlog/rlog2`, and tick the checkbox for _Basic Auth_, then
+enter the credentials you defined while configuring the service.
 
-After pressing _Save & Test_ you should see a `Data source is working` message.
-If you any other message, for example `Forbidding` check the values you entered.
+After pressing _Save & Test_ you should see a `Data source is working` message. If you any other message, for
+example `Forbidding` check the values you entered.
 
 Now you can access ArangoDB from within Grafana.
 
@@ -120,20 +110,19 @@ You will see a straight line for any time range.
 
 ### Query Details
 
-The purpose of the Grafana connector is to allow time series data from ArangoDB
-to be displayed in Grafana. As ArangoDB is a multi-model database and not only
-a time series one, it requires you to provide a query that will produce a time
+The purpose of the Grafana connector is to allow time series data from ArangoDB to be displayed in Grafana. As ArangoDB
+is a multi-model database and not only a time series one, it requires you to provide a query that will produce a time
 series when executed. The current query is
 
     FOR data IN RANGE({{{grafana.START}}}, {{{grafana.END}}}, {{{grafana.INTERVAL}}})
         LET doc = {time: data, value: data}
 
 In general, the query defined should generate a sequence of documents called `doc`
-that contain two attribute `time` and `value`. The attribute `time` is a timestamp
-expressed as milliseconds since 1.1.1970. The attribute `value` must be a number.
+that contain two attribute `time` and `value`. The attribute `time` is a timestamp expressed as milliseconds since
+1.1.1970. The attribute `value` must be a number.
 
-Note that the query is not a complete AQl. In the current example a filter and return
-will automatically be added so that the final query is
+Note that the query is not a complete AQl. In the current example a filter and return will automatically be added so
+that the final query is
 
     FOR data IN RANGE(1641643318607, 1641816118607, 120000)
         LET doc = {time: data, value: data}
@@ -165,9 +154,8 @@ This query will augmented and executed as
 
 ### Aggregations
 
-As you can see the query will return all data points within the time range. Sometimes
-you want to restrict the data returned and instead return an aggregation. For example,
-the average.
+As you can see the query will return all data points within the time range. Sometimes you want to restrict the data
+returned and instead return an aggregation. For example, the average.
 
 Go back to ArangoDB configuration and change the _aggregation_ entry from `NONE` to
 `AVG`. Now the finally query will be
@@ -181,9 +169,8 @@ Go back to ArangoDB configuration and change the _aggregation_ entry from `NONE`
 
 ### Multiple Aggregations
 
-It is possible to allow the Grafana user to select an aggregation. Instead of just
-defining a single aggregate, you can define multiple, comma-seperated values.
-For example, `NONE,SUM,AVG`.
+It is possible to allow the Grafana user to select an aggregation. Instead of just defining a single aggregate, you can
+define multiple, comma-seperated values. For example, `NONE,SUM,AVG`.
 
 However, in order to give the user a choice you need to change the target to
 
@@ -193,15 +180,14 @@ Now the _Metric_ drop-down will now show
 
 ![JSON configuration dialog](./images/metric-multiple.png)
 
-Why is that so? The Grafana connector will generate one target per aggregation
-defined. It also uses Mustache to allow parameters within defined strings. In
-this example, the target is defined as `rlog.{{{aggregation}}}`. The part
+Why is that so? The Grafana connector will generate one target per aggregation defined. It also uses Mustache to allow
+parameters within defined strings. In this example, the target is defined as `rlog.{{{aggregation}}}`. The part
 `{{{aggregation}}}` will be replaced by the current value of the aggregation.
 
 ### Using Different Collections
 
-It is also possible to use different collections to use. Assume your data is
-stored in `data` and another time series in `rlog`.
+It is also possible to use different collections to use. Assume your data is stored in `data` and another time series
+in `rlog`.
 
 If you define the target as
 
@@ -226,7 +212,6 @@ and change the query to
 
     FOR data IN {{{alias}}}
         LET doc = {time: data.date, value: data.value}
-
 
 ## License
 
