@@ -1,9 +1,8 @@
 # Grafana Simple JSON connector for ArangoDB
 
-STILL IN PROGRESS
-
 This is the Grafana connector for ArangoDB that can be used as data source for the Grafana plugin
 [JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/). Note that this plugin requires Grafana
+
 8.
 
 ## Preparation
@@ -200,7 +199,7 @@ and your query as
 
 ### Using Different Collections With Multiple Aggregations
 
-Combining these both feature requires a bit more work. Because targets will be
+Combining these both feature requires a bit more work because targets will be
 
     data.{{{aggregation}}},rlog.{{{aggregation}}}
 
@@ -212,6 +211,52 @@ and change the query to
 
     FOR data IN {{{alias}}}
         LET doc = {time: data.date, value: data.value}
+
+### Grafana Variables
+
+While the above approach let you define the collection to use when setting the query in Grafana, there is also a
+different solution. Grafana allows for variables to be defined that the user can select in the dashboard.
+
+![JSON configuration dialog](./images/variables-grafana.png)
+
+The _Custom_ query allows you to specify a number of static values. These can then selected in the dashboard.
+
+Change the `target` to
+
+    {{{aggregation}}}
+
+clear the alias, and define the query
+
+    FOR data IN {{{grafana.collection}}}
+        LET doc = {time: data.date, value: data.value}
+
+### Multi-Value Grafana Variables
+
+Change the option for the variable defined above in Grafana to _Multi-value_. This will allow you to select one or more
+options. However, if you select both
+`data` and `rlog` you will see an error message. This is because you need to configure the variable in ArangoDB as well.
+Go to _Settings_ and set
+`multiValueTemplateVariables` to
+
+    collection
+
+With this definition the Grafana connector will iterate over all values selected and create a separate response.
+
+### Dynamic Grafana Variables
+
+Instead of hard-coding the different collection names you can also query the Grafana connector.
+
+In the Grafana connector define
+
+    {"collections":"for c in ['data', 'rlog'] return c"}
+
+This will define a template variable query called `collections`.
+
+Go back to variable definitions in Grafana and change it to
+
+![JSON configuration dialog](./images/variables2-grafana.png)
+
+This will now use the query defined in the connector to extract the values.
 
 ## License
 
