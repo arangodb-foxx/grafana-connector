@@ -1,9 +1,7 @@
 # Grafana Simple JSON connector for ArangoDB
 
 This is the Grafana connector for ArangoDB that can be used as data source for the Grafana plugin
-[JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/). Note that this plugin requires Grafana
-
-8.
+[JSON Data Source](https://grafana.com/grafana/plugins/simpod-json-datasource/). Note that this plugin requires Grafana 8.
 
 ## Preparation
 
