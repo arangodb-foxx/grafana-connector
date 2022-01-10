@@ -101,7 +101,8 @@ router
             interval: body.intervalMs,
             scopedVars: body.scopedVars,
             start: Number(new Date(body.range.from)),
-            end: Number(new Date(body.range.to))
+            end: Number(new Date(body.range.to)),
+            targets: body.targets
         });
 
         res.json(response);
