@@ -20,18 +20,18 @@ $ foxx install -u root -P -H http://COORDINATOR:8529 -D _system /grafana \
 https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ```
 
-or the
-[ArangoDB web interface](https://docs.arangodb.com/latest/Manual/Programs/WebInterface/Services.html):
+or without `foxx-cli` and instead using `npx`:
 
 ```sh
 $ npx foxx-cli install -u root -P -H http://localhost:8529 -D _system /grafana \
 https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ```
+You can also install using the [ArangoDB web interface](https://www.arangodb.com/docs/stable/programs-web-interface-services.html)
 
 ## Simple Configuration
 
 Before you can use the ArangoDB connector in Grafana you need to configure the service using the web interface or the
-Foxx CLI. There are the following parts that need to be configured.
+Foxx CLI. The following parts need to be configured.
 
 * ArangoDB grafana-connector
     * a username / password to access the service in ArangoDB
@@ -74,7 +74,7 @@ Define the following dummy query
 
 See below for a detailed explanation. Save the configuration.
 
-Assuming that the database is called `rlog` and the mounted the Foxx service at
+Assuming that the database is called `rlog` and the Foxx service is mounted at
 `rlog2` then you can check using curl
 
     > curl "http://localhost:8529/_db/rlog/rlog2/" --user username:password
@@ -118,7 +118,7 @@ In general, the query defined should generate a sequence of documents called `do
 that contain two attribute `time` and `value`. The attribute `time` is a timestamp expressed as milliseconds since
 1.1.1970. The attribute `value` must be a number.
 
-Note that the query is not a complete AQl. In the current example a filter and return will automatically be added so
+Note that the query is not a complete AQL query. In the following example a `FILTER` and `RETURN` are automatically added so
 that the final query is
 
     FOR data IN RANGE(1641643318607, 1641816118607, 120000)
@@ -130,7 +130,7 @@ that the final query is
 ### Collection Query
 
 The dummy query only contained static values. Now assume that you have a collection
-`data` the contains documents the following type
+`data` the contains documents of the following type
 
     {
         "date": 1641643318607,
@@ -142,7 +142,7 @@ and you want to use this collection as data source. In this case the query looks
     FOR data IN data
         LET doc = {time: data.date, value: data.value}
 
-This query will augmented and executed as
+This query will be augmented and executed as
 
      FOR data IN data LET doc = {time: data.date, value: data.value}
           FILTER doc.time >= @value0 AND doc.time < @value1
@@ -155,7 +155,7 @@ As you can see the query will return all data points within the time range. Some
 returned and instead return an aggregation. For example, the average.
 
 Go back to ArangoDB configuration and change the _aggregation_ entry from `NONE` to
-`AVG`. Now the finally query will be
+`AVG`. Now the final query will be
 
     FOR data IN data LET doc = {time: data.date, value: data.value}
           FILTER doc.time >= @value0 AND doc.time < @value1
@@ -173,7 +173,7 @@ However, in order to give the user a choice you need to change the target to
 
     rlog.{{{aggregation}}}
 
-Now the _Metric_ drop-down will now show
+Now the _Metric_ drop-down will show
 
 ![JSON configuration dialog](./images/metric-multiple.png)
 
@@ -183,7 +183,7 @@ parameters within defined strings. In this example, the target is defined as `rl
 
 ### Using Different Collections
 
-It is also possible to use different collections to use. Assume your data is stored in `data` and another time series
+It is also possible to use different collections. Assume your data is stored in `data` and another time series
 in `rlog`.
 
 If you define the target as
@@ -197,11 +197,11 @@ and your query as
 
 ### Using Different Collections With Multiple Aggregations
 
-Combining these both feature requires a bit more work because targets will be
+Combining these feature requires a bit more work because targets will be
 
     data.{{{aggregation}}},rlog.{{{aggregation}}}
 
-This can no longer be used as collection name. You need to define `alias` as well
+This can no longer be used as a collection name. You need to define an `alias` as well
 
     data,rlog
 
@@ -212,7 +212,7 @@ and change the query to
 
 ### Grafana Variables
 
-While the above approach let you define the collection to use when setting the query in Grafana, there is also a
+While the above approaches let you define the collection to use when setting the query in Grafana, there is also a
 different solution. Grafana allows for variables to be defined that the user can select in the dashboard.
 
 ![JSON configuration dialog](./images/variables-grafana.png)
