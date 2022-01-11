@@ -1,8 +1,8 @@
 {
   "private": true,
   "dependencies": {
-    "@types/arangodb": "^3.4.9",
-    "@types/joi": "^14.3.2",
-    "mustache": "^4.0.1"
+    "@types/arangodb": "^3.5.13",
+    "lodash": "^4.17.21",
+    "mustache": "^4.2.0"
   }
 }
