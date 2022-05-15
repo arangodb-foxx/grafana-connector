@@ -62,18 +62,22 @@ router
     .post('/search', (req, res) => {
         const body = req.body;
 
+        if (cfg.logQuery) {
+            console.log(`search: body ${body}`);
+        }
+
         if (body && body.target) {
             const target = body.target;
             const results = queries.search(cfg, target);
 
             if (cfg.logQuery) {
-                console.log(`target ${target}: ${JSON.stringify(results)}`);
+                console.log(`search: target ${target} returns ${JSON.stringify(results)}`);
             }
 
             res.json(results);
         } else {
             if (cfg.logQuery) {
-                console.log(`target: ${JSON.stringify(TARGET_KEYS)}`);
+                console.log(`search: returns ${JSON.stringify(TARGET_KEYS)}`);
             }
 
             res.json(TARGET_KEYS);
@@ -88,6 +92,34 @@ router
         'are available to the data source.'
     );
 
+router
+    .post('/variable', (req, res) => {
+        const body = req.body;
+
+        if (cfg.logQuery) {
+            console.log(`search: body ${body}`);
+        }
+
+        if (body && body.payload && body.payload.target) {
+            const target = body.payload.target;
+            const results = queries.search(cfg, target);
+
+            if (cfg.logQuery) {
+                console.log(`variable: target ${target} returns ${JSON.stringify(results)}`);
+            }
+
+          res.json(results);
+        } else {
+          res.json([]);
+        }
+    })
+    .body(joi.object({
+        target: joi.string().allow(null, '').optional()
+    }).options({allowUnknown: true}))
+    .summary('Variable values')
+    .description(
+        'This endpoint is used to determine the values of a given variable.'
+    );
 
 router
     .post('/query', (req, res) => {
