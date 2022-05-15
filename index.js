@@ -103,7 +103,7 @@ router
 
         if (body && body.payload && body.payload.target) {
             const target = body.payload.target;
-            const results = _.map(queries.search(cfg, target), t => {"value": t});
+            const results = _.map(queries.search(cfg, target), t => ({"value": t}));
 
             if (cfg.logQuery) {
                 console.log(`variable: target ${target} returns ${JSON.stringify(results)}`);
