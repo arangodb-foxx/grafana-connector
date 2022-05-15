@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/foxx-manifest",
   "name": "grafana-connector",
   "description": "Grafana JSON connector for ArangoDB.",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "thumbnail": "images/grafana.png",
   "engines": {
     "arangodb": "^3.8.0"
