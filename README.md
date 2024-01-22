@@ -26,7 +26,7 @@ or without `foxx-cli` and instead using `npx`:
 $ npx foxx-cli install -u root -P -H http://localhost:8529 -D _system /grafana \
 https://github.com/arangodb-foxx/grafana-connector/archive/master.zip
 ```
-You can also install using the [ArangoDB web interface](https://www.arangodb.com/docs/stable/programs-web-interface-services.html)
+You can also install using the [ArangoDB web interface](https://docs.arangodb.com/stable/components/web-interface/services/)
 
 ## Simple Configuration
 
@@ -47,7 +47,7 @@ The following steps describe a simple configuration without any special targets 
 
 You should have installed the Foxx service as described above. The _Settings_ tab will show the configuration page.
 
-![Grafana Connector configuration dialog](./images/config.png)
+![Grafana Connector configuration dialog](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/config.png)
 
 There are two possible configurations for authorization depending on the value of `server.authentication-system-only`.
 If `true` then Foxx apps are not authenticated and need to provide their own authentication. In that case you should
@@ -63,7 +63,7 @@ In either case you will need the username and password later when configuring th
 
 `target` can be any name. It will be shown in Grafana under the Metric selector when defining a query.
 
-![Grafana Metric](./images/metric-grafana.png)
+![Grafana Metric](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/metric-grafana.png)
 
 Leave `alias` and `multiValueTemplateVariables`, `templateVariables` empty for now.
 
@@ -87,7 +87,7 @@ Assuming that the database is called `rlog` and the Foxx service is mounted at
 To add the connector as a data source in Grafana, navigate to
 _Configuration > Date Sources_ and press the _Add data source_ button, then select the _Json_ data source.
 
-![JSON configuration dialog](./images/simplejson.png)
+![JSON configuration dialog](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/simplejson.png)
 
 Enter the URL of the service, e.g. `http://localhost:8529/_db/rlog/rlog2`, and tick the checkbox for _Basic Auth_, then
 enter the credentials you defined while configuring the service.
@@ -101,7 +101,7 @@ Now you can access ArangoDB from within Grafana.
 
 Create a dashboard and add a panel using the datasource.
 
-![JSON configuration dialog](./images/simple-dashboard.png)
+![JSON configuration dialog](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/simple-dashboard.png)
 
 You will see a straight line for any time range.
 
@@ -175,7 +175,7 @@ However, in order to give the user a choice you need to change the target to
 
 Now the _Metric_ drop-down will show
 
-![JSON configuration dialog](./images/metric-multiple.png)
+![JSON configuration dialog](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/metric-multiple.png)
 
 Why is that so? The Grafana connector will generate one target per aggregation defined. It also uses Mustache to allow
 parameters within defined strings. In this example, the target is defined as `rlog.{{{aggregation}}}`. The part
@@ -215,7 +215,7 @@ and change the query to
 While the above approaches let you define the collection to use when setting the query in Grafana, there is also a
 different solution. Grafana allows for variables to be defined that the user can select in the dashboard.
 
-![JSON configuration dialog](./images/variables-grafana.png)
+![JSON configuration dialog](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/variables-grafana.png)
 
 The _Custom_ query allows you to specify a number of static values. These can then selected in the dashboard.
 
@@ -252,7 +252,7 @@ This will define a template variable query called `collections`.
 
 Go back to variable definitions in Grafana and change it to
 
-![JSON configuration dialog](./images/variables2-grafana.png)
+![JSON configuration dialog](https://raw.githubusercontent.com/arangodb-foxx/grafana-connector/master/images/variables2-grafana.png)
 
 This will now use the query defined in the connector to extract the values.
 
