@@ -2,77 +2,20 @@
 # yarn lockfile v1
 
 
-"@hapi/hoek@^9.0.0":
-  "integrity" "sha512-gfta+H8aziZsm8pZa0vj04KO6biEiisppNgA1kbJvFrrWu9Vm7eaUEy76DIxsuTaWvti5fkJVhllWc6ZTE+Mdw=="
-  "resolved" "https://registry.npmjs.org/@hapi/hoek/-/hoek-9.2.1.tgz"
-  "version" "9.2.1"
-
-"@hapi/topo@^5.0.0":
-  "integrity" "sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg=="
-  "resolved" "https://registry.npmjs.org/@hapi/topo/-/topo-5.1.0.tgz"
-  "version" "5.1.0"
-  dependencies:
-    "@hapi/hoek" "^9.0.0"
-
-"@sideway/address@^4.1.3":
-  "integrity" "sha512-8ncEUtmnTsMmL7z1YPB47kPUq7LpKWJNFPsRzHiIajGC5uXlWGn+AmkYPcHNl8S4tcEGx+cnORnNYaw2wvL+LQ=="
-  "resolved" "https://registry.npmjs.org/@sideway/address/-/address-4.1.3.tgz"
-  "version" "4.1.3"
-  dependencies:
-    "@hapi/hoek" "^9.0.0"
-
-"@sideway/formula@^3.0.0":
-  "integrity" "sha512-vHe7wZ4NOXVfkoRb8T5otiENVlT7a3IAiw7H5M2+GO+9CDgcVUUsX1zalAztCmwyOr2RUTGJdgB+ZvSVqmdHmg=="
-  "resolved" "https://registry.npmjs.org/@sideway/formula/-/formula-3.0.0.tgz"
-  "version" "3.0.0"
-
-"@sideway/pinpoint@^2.0.0":
-  "integrity" "sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ=="
-  "resolved" "https://registry.npmjs.org/@sideway/pinpoint/-/pinpoint-2.0.0.tgz"
-  "version" "2.0.0"
-
 "@types/arangodb@^3.5.13":
-  "integrity" "sha512-1V0vsxzW7dncL0wC+jCgEWKdvmUZthEd79yzw8vgCR6X0jVtZUsJP2CYnuBeOSXGFFeLz0hKKD3uP66bjc49zw=="
-  "resolved" "https://registry.npmjs.org/@types/arangodb/-/arangodb-3.5.13.tgz"
-  "version" "3.5.13"
+  version "3.5.13"
+  resolved "https://registry.npmjs.org/@types/arangodb/-/arangodb-3.5.13.tgz"
   dependencies:
     "@types/node" "*"
 
 "@types/node@*":
-  "integrity" "sha512-rouEWBImiRaSJsVA+ITTFM6ZxibuAlTuNOCyxVbwreu6k6+ujs7DfnU9o+PShFhET78pMBl3eH+AGSI5eOTkPA=="
-  "resolved" "https://registry.npmjs.org/@types/node/-/node-14.0.13.tgz"
-  "version" "14.0.13"
+  version "14.0.13"
+  resolved "https://registry.npmjs.org/@types/node/-/node-14.0.13.tgz"
 
-"joi-to-json@^2.1.1":
-  "integrity" "sha512-wGnqVatHZ4h8rBFBkU66BJ4g7pg8Fw0cqs2Wc8/jZUALb+N0GrFDBNdooVfPdyonbuj8gbqpQJzV06jvJ9lFmA=="
-  "resolved" "https://registry.npmjs.org/joi-to-json/-/joi-to-json-2.1.1.tgz"
-  "version" "2.1.1"
-  dependencies:
-    "lodash" "^4.17.21"
-    "semver-compare" "^1.0.0"
+lodash@^4.18.1:
+  version "4.18.1"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
 
-"joi@^17.5.0":
-  "integrity" "sha512-R7hR50COp7StzLnDi4ywOXHrBrgNXuUUfJWIR5lPY5Bm/pOD3jZaTwpluUXVLRWcoWZxkrHBBJ5hLxgnlehbdw=="
-  "resolved" "https://registry.npmjs.org/joi/-/joi-17.5.0.tgz"
-  "version" "17.5.0"
-  dependencies:
-    "@hapi/hoek" "^9.0.0"
-    "@hapi/topo" "^5.0.0"
-    "@sideway/address" "^4.1.3"
-    "@sideway/formula" "^3.0.0"
-    "@sideway/pinpoint" "^2.0.0"
-
-"lodash@^4.17.21":
-  "integrity" "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
-  "resolved" "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
-  "version" "4.17.21"
-
-"mustache@^4.2.0":
-  "integrity" "sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ=="
-  "resolved" "https://registry.npmjs.org/mustache/-/mustache-4.2.0.tgz"
-  "version" "4.2.0"
-
-"semver-compare@^1.0.0":
-  "integrity" "sha1-De4hahyUGrN+nvsXiPavxf9VN/w="
-  "resolved" "https://registry.npmjs.org/semver-compare/-/semver-compare-1.0.0.tgz"
-  "version" "1.0.0"
+mustache@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.npmjs.org/mustache/-/mustache-4.2.0.tgz"
